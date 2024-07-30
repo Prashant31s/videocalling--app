@@ -1,0 +1,121 @@
+.bottomMenu {
+  @apply  justify-between   mx-auto;
+  align-items: center;
+  position:relative;
+  justify-content: center;
+  gap: 15px;
+  display: flex;
+  height:100%;
+  right: 0;
+  left: 0;
+  
+  
+  .icon {
+    @apply rounded-full text-white ;
+    padding: 10px;
+    cursor: pointer;
+    background-color: theme("colors.secondary");
+
+    &:hover,
+    &.active {
+      background-color: theme("colors.buttonPrimary");
+    }
+  }
+  .whitesvg{
+    filter: invert(1) brightness(100%);
+  }
+}
+
+/* bottom css ends */
+
+
+
+/* copysection css starts */
+.copyContainer {
+  @apply  text-black   ;
+  display: flex;
+  flex-direction: column;
+  position: absolute;
+  border-color: black;
+  align-items: center;
+  border-width: 2px;
+  justify-content: center;
+  
+  margin: 10px;
+  margin-left: 20px;
+  border-radius: 0.25rem;
+  padding: 0.5rem;
+
+  .copyHeading {
+    color: black;
+  }
+  .copyDescription {
+    @apply flex items-center text-sm;
+    display: flex;
+    margin: 10px;
+  }
+}
+
+
+/* copy section css ends */
+
+
+/* player  css start */
+.playerContainer {
+  @apply  overflow-hidden   ;
+
+  object-fit: cover;
+  height:100%;
+  background-color:  #D3D3D3;
+  border: 1px solid black;
+  position: relative;
+}
+
+.active {
+  @apply rounded-xl;
+}
+
+.notActive {
+  @apply rounded-xl ;
+  
+
+}
+
+.icon2 {
+  @apply text-white absolute right-3 bottom-3;
+}
+
+.user {
+  @apply text-white ;
+  
+}
+.name{
+  @apply text-white absolute left-2 bottom-2
+}
+.notPlaying {
+  @apply flex items-center justify-center;
+  /* object-fit: contain; */
+  background-color:	rgb(103, 101, 101) ;
+  border: 1px solid black;
+
+  
+}
+.username{
+ color: white;
+ position: absolute;
+ left: 5px;
+ bottom: 5px;
+ padding: 5px 10px;
+ background-color:	rgb(64,64,64) ;
+ border-radius: 8px;
+}
+.notplayingusername{
+ color: white;
+ position: absolute;
+ font-size:70px;
+ justify-content: center;
+ 
+ border-radius: 100%;
+
+}
+/* player css ends */

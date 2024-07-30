@@ -1,0 +1,151 @@
+
+.main{
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  width: 100vw;
+  background-color:  white;
+}
+.toppart{
+  display: flex;
+  flex-direction: row;
+  height: 85vh;
+  width:100vw ;
+  padding: 20px;
+  gap: 15px;
+
+}
+.bottompart{
+  background-color: 	#E5E4E2 ;
+  display: flex;
+  flex-direction: row;
+  height: 15vh;
+  width: 100vw;
+  border: 1px solid black;
+}
+.PlayerContainer {
+  
+  display: grid;
+  align-items: center;
+  justify-content: center;
+  flex-grow: 1;
+  width: 100%;
+  height: 100%;
+  border: 5px;
+  border-color: #dbd7d2;
+  box-sizing: border-box;
+  gap: 10px;
+
+    /* @apply absolute w-1/2 left-0 right-0 mx-auto;
+    top: 20px;
+    bottom: 50px;
+    height: calc(100vh - 55px - 100px); */
+}
+.whitesvg{
+  filter: invert(1) brightness(100%);
+}
+.onePlayer {
+  grid-template-columns: 1fr;
+  grid-template-rows: 1fr;
+  width: 50%;
+  
+
+
+}
+.PlayerContainer.twoPlayers >div,
+.PlayerContainer.twoPlayers video {
+  height: 100%;
+  width: 100%;
+  object-fit: cover;
+}
+.twoPlayers {
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows: 1fr;
+
+}
+
+
+.threePlayers {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows: 1fr 1fr;
+  height: 100%;
+  width: 100%;
+  gap: 10px;
+ 
+}
+.PlayerContainer.threePlayers >div,
+.PlayerContainer.threePlayers video {
+  height: 100%;
+  width: 100%;
+  object-fit: cover;
+}
+.PlayerContainer.threePlayers > :nth-child(1) {
+  grid-column: 1 / 2;
+  grid-row: 1 / 3;
+  height: 100%;
+ 
+}
+
+.PlayerContainer.threePlayers > :nth-child(2),
+.PlayerContainer.threePlayers > :nth-child(3) {
+  grid-column: 2 / 3;
+
+  
+  
+}
+
+.PlayerContainer.fourPlayers >div,
+.PlayerContainer.fourPlayers video {
+  height: 100%;
+  width: 100%;
+  object-fit: cover;
+}
+.fourPlayers {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-rows: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.PlayerContainer.fivePlayers >div,
+.PlayerContainer.fivePlayers video {
+  height: 100%;
+  width: 100%;
+  object-fit: cover;
+}
+.fivePlayers {
+  grid-template-columns: 1fr 1fr 1fr;
+  grid-template-rows: 1fr 1fr ;
+}
+
+
+.PlayerContainer.sixPlayers >div,
+.PlayerContainer.sixPlayers video {
+  height: 100%;
+  width: 100%;
+  object-fit: cover;
+}
+.sixPlayers {
+  grid-template-columns: 1fr 1fr 1fr;
+  grid-template-rows: 1fr 1fr ;
+}
+
+
+
+
+  
+  .datalist{
+    width: 25%;
+    height: 100%;
+    background-color:  #dbd7d2;
+    padding: 10px;
+    border-radius: 15px;
+    border: 1px solid black;
+    
+    
+    
+  }
+  
+  
+ 
