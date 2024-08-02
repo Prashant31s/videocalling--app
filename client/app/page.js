@@ -1,7 +1,7 @@
 "use client";
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import { useRouter } from "next/navigation";
-import socket from "./components/connect";
+
 
 export default function Home() {
   const [roomName, setRoomName] = useState("");
@@ -12,16 +12,7 @@ export default function Home() {
 
   function userjoin() {
     if (userName) {
-      socket.emit("username", { userName });
-      socket.on("approved username", () => {
-        router.push(`/Chatroom?user=${userName}&room=${roomName}`);
-      });
-      socket.on("duplicate username", (m) => {
-        setTakenName(`username ${m.userName} is taken`);
-      });
-      socket.on("toobig",()=>{
-        setTakenName(`Username max length exceeded`);
-      })
+      router.push(`/Chatroom?user=${userName}&room=${roomName}`);
     }
   }
 

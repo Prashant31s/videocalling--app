@@ -1,13 +1,5 @@
 import cx from "classnames";
-import {
-  Mic,
-  Video,
-  PhoneOff,
-  MicOff,
-  VideoOff,
-  ListCollapse,
-  List,
-} from "lucide-react";
+import { Video, VideoOff, ListCollapse, List } from "lucide-react";
 
 import styles from "./index.module.css";
 

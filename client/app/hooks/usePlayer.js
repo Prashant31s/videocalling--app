@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { cloneDeep } from "lodash";
 import socket from "../components/connect";
 import { useRouter } from "next/navigation";
@@ -8,7 +8,6 @@ const usePlayer = (myId, roomId, peer) => {
   const router = useRouter();
   const playersCopy = cloneDeep(players);
 
-  
   const playerHighlighted = playersCopy[myId];
   delete playersCopy[myId];
 
@@ -31,8 +30,7 @@ const usePlayer = (myId, roomId, peer) => {
     socket.emit("user-toggle-audio", myId, roomId);
   };
 
-
-  const toggleVideoo =()=>{
+  const toggleVideoo = () => {
     console.log("I toggled my video");
     setPlayers((prev) => {
       const copy = cloneDeep(prev);
@@ -42,12 +40,10 @@ const usePlayer = (myId, roomId, peer) => {
       return { ...copy };
     });
     socket.emit("user-toggle-video", myId, roomId);
-
   };
-  
+
   const toggleVideo = () => {
     let timeoutId = setTimeout(toggleVideoo, 100);
-    
   };
 
   return {

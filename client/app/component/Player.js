@@ -1,13 +1,12 @@
 import React from "react";
 import ReactPlayer from "react-player";
 import cx from "classnames";
-import { Mic, MicOff, UserSquare2 } from "lucide-react";
+import { Mic, MicOff } from "lucide-react";
 
 import styles from "./index.module.css";
 
 const Player = (props) => {
   const { url, muted, playing, isActive, name } = props;
-  
 
   return (
     <div
@@ -29,12 +28,9 @@ const Player = (props) => {
           <p className={styles.username}>{name}</p>
         </>
       ) : (
-    
-        <p className={styles.notplayingusername}>{name.charAt(0)}{name.charAt(1)}</p>
-        
-        
+        <p className={styles.notplayingusername}>{name}</p>
       )}
-      
+
       {!isActive ? (
         muted ? (
           <>

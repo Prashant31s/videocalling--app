@@ -1,5 +1,5 @@
 "use client";
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import socket from "../components/connect";
 import { useSearchParams } from "next/navigation";
 import usePeer from "../hooks/usePeer";
@@ -9,18 +9,22 @@ import Player from "../component/Player";
 import Bottom from "../component/Bottom";
 import CopySection from "../component/CopySection";
 import styles from "./Chatroom.module.css";
-import { cloneDeep, cond, set } from "lodash";
-import { Mic, PhoneOff } from "lucide-react";
+import { cloneDeep } from "lodash";
+import { Mic } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { createBrowserHistory } from 'history';
 
 function Chatroom() {
   const searchParams = useSearchParams();
   const user = searchParams.get("user");
   const newroom = searchParams.get("room");
+  const router = useRouter();
   const [roomId, setRoomId] = useState(newroom);
+  const [allow, setAllow] = useState(false);
+  const [usernameApproved, setUsernameApproved] = useState(false);
+  const history = createBrowserHistory();
   const [data, setData] = useState([]);
   const { peer, myId } = usePeer();
-  const router = useRouter();
   const [length, setLength] = useState(0);
 
   const { stream } = useMediaStream();
@@ -40,6 +44,35 @@ function Chatroom() {
     toggleVideo,
     leaveRoom,
   } = usePlayer(myId, roomId, peer);
+  
+
+  useEffect(() => {
+    history.listen((update) => {
+      if (update.action === 'POP'){
+  
+        socket.emit("back-button-leave", socket.id);
+      }
+    });
+  }, []);
+  
+
+  useEffect(() => {
+
+    socket.emit("username", { user });
+    socket.on("duplicate username", (m) => {
+      router.push(`/`);
+      setAllow(false);
+    });
+
+    socket.on("username approved", () => {
+      setUsernameApproved(true);
+      setAllow(true);
+    });
+    return () => {
+      socket.off("duplicate username");
+      socket.off("username appreoved");
+    };
+  }, [user, router]);
 
   useEffect(() => {
     if (myId) {
@@ -47,7 +80,7 @@ function Chatroom() {
     }
   }, [myId, myidnew]);
   useEffect(() => {
-    if (!socket || !peer || !stream) return;
+    if (!socket || !peer || !stream || !usernameApproved) return;
     const handleUserConnected = (newUser, roomtohost, roomuser) => {
       const call = peer.call(newUser, stream);
       call.on("stream", (incomingStream) => {
@@ -72,23 +105,18 @@ function Chatroom() {
     return () => {
       socket.off("user-connected", handleUserConnected);
     };
-  }, [peer, setPlayers, socket, stream]);
+  }, [peer, setPlayers, socket, stream, usernameApproved]);
 
-  const handleUserLeave = (userId) => {
-    // fucntion to handle if a person has leaved the room
-    console.log(`user ${userId} is leaving the room`);
-
-    users[userId]?.close(); //if the user leaves delete its data from the client side player so that its player doesnt dhow in the screen
+  const handleUserLeave = (userId) => {  // fucntion to handle if a person has leaved the room
+    users[userId]?.close();              //if the user leaves delete its data from the client side player so that its player doesnt dhow in the screen
     const playersCopy = cloneDeep(players);
     delete playersCopy[userId];
     setPlayers(playersCopy);
   };
   useEffect(() => {
-    if (!socket) return;
-    const handleToggleAudio = (userId, roomuser) => {
-      //function to handle if someone has changed it audio int the room
+    if (!socket || !usernameApproved) return;
+    const handleToggleAudio = (userId, roomuser) => { //function to handle if someone has changed it audio int the room       
       setData(roomuser);
-      console.log("ddddddo", data);
       setPlayers((prev) => {
         const copy = cloneDeep(prev);
         copy[userId].muted = !copy[userId].muted;
@@ -96,9 +124,7 @@ function Chatroom() {
       });
     };
 
-    const handleToggleVideo = (userId) => {
-      //function to handle if someone has changed its vedio status in the room
-
+    const handleToggleVideo = (userId) => { //function to handle if someone has changed its vedio status in the room
       setPlayers((prev) => {
         const copy = cloneDeep(prev);
         copy[userId].playing = !copy[userId].playing; // changing the video status of that user so that it can be reflected on the screen
@@ -106,11 +132,9 @@ function Chatroom() {
       });
     };
     setLength(Object.keys(nonHighlightedPlayers).length + 1);
-    const handleDataUpdate = (roomuser, delete_socketid) => {
-      // handle data updation coming from server in the room so that user list can be updated and shown
+    const handleDataUpdate = (roomuser, delete_socketid) => {// handle data updation coming from server in the room so that user list can be updated and shown
       setData(roomuser);
-      if (socket.id === delete_socketid) {
-        //if the current user is being kicked from the room by the host than it will be pushed to the homepage
+      if (socket.id === delete_socketid) { //if the current user is being kicked from the room by the host than it will be pushed to the homepage
         peer.disconnect();
         router.push(`/`);
       }
@@ -127,12 +151,19 @@ function Chatroom() {
       socket.off("user-leave", handleUserLeave);
       socket.off("data-update", handleDataUpdate);
     };
-  }, [players, setPlayers, stream, players.playing, playerHighlighted, data]);
+  }, [
+    players,
+    setPlayers,
+    stream,
+    players.playing,
+    playerHighlighted,
+    data,
+    usernameApproved,
+  ]);
 
   useEffect(() => {
-    if (!peer || !stream) return;
-    peer.on("call", (call) => {
-      // the peer wiil make a call and also receive the call in the room and set the incoming stream in players so thatit can be shown
+    if (!usernameApproved || !peer || !stream) return;
+    peer.on("call", (call) => { // the peer wiil make a call and also receive the call in the room and set the incoming stream in players so thatit can be shown
       const { peer: callerId } = call;
       call.answer(stream);
 
@@ -162,11 +193,10 @@ function Chatroom() {
         }
       });
     });
-  }, [peer, setPlayers, stream, players, myidnew, data]);
+  }, [usernameApproved, peer, setPlayers, stream, players, myidnew, data]);
 
   useEffect(() => {
-    if (!stream || !myId) return;
-    console.log(`setting my stream ${myId}`);
+    if (!usernameApproved || !stream || !myId) return;
     setPlayers((prev) => ({
       //users stream will be set into the player
       ...prev,
@@ -176,11 +206,11 @@ function Chatroom() {
         playing: true,
       },
     }));
-  }, [myId, setPlayers, stream]);
+  }, [usernameApproved, myId, setPlayers, stream]);
 
   useEffect(() => {
-    const handlehostuser = (host, ruser) => {
-      // function to handle the hostuserr and tell the users in the room that who is the host
+    if (!usernameApproved) return;
+    const handlehostuser = (host, ruser) => { // function to handle the hostuserr and tell the users in the room that who is the host
       let x = 0;
       for (let i = 0; i < ruser.length; i++) {
         if (ruser[i].room == roomId) {
@@ -192,9 +222,11 @@ function Chatroom() {
       setRoomhost(host);
     };
     socket.on("host-user", handlehostuser);
-  }, [data, length]);
-  const removeuser = (userid) => {
-    // if the user want to leave from the room by clicking the button it will notify the room that the userid is leaving the roomId emitting tho server
+    return () => {
+      socket.off("host-user", handlehostuser);
+    };
+  }, [usernameApproved, data, length]);
+  const removeuser = (userid) => { // if the user want to leave from the room by clicking the button it will notify the room that the userid is leaving the roomId emitting tho server
     socket.emit("removeuser", userid, roomId);
   };
   const mictoggleuser = (userid) => {
@@ -204,19 +236,6 @@ function Chatroom() {
   const toggleDataList = () => {
     setShowDataList((prev) => !prev); // Toggle the visibility state
   };
-
-  // useEffect(() => {
-  //   router.beforePopState(({ url, as, options }) => {
-  //     // I only want to allow these two routes!
-  //     if (as !== '/' && as !== '/other') {
-  //       // Have SSR render bad routes as a 404.
-  //       window.location.href = as
-  //       return false
-  //     }
- 
-  //     return true
-  //   })
-  // }, [router])
 
   if (length === 1) {
     playerContainerClass += ` ${styles.onePlayer}`;
@@ -234,6 +253,11 @@ function Chatroom() {
 
   return (
     <>
+      <img
+        src={`https://upload.wikimedia.org/wikipedia/commons/a/a7/Skype_logo.svg`}
+        alt="button icon"
+        className="absolute left-[70px] top-[2px] w-[65px]"
+      />
       <div className={styles.main}>
         <div className={styles.toppart}>
           <div className={playerContainerClass}>
@@ -301,7 +325,7 @@ function Chatroom() {
                                     className={styles.whitesvg}
                                   />
                                 </button>
-                                
+
                                 {item.audio === false && (
                                   <Mic
                                     size={25}
@@ -320,7 +344,7 @@ function Chatroom() {
           )}
         </div>
         <div className={styles.bottompart}>
-          <div className=" h-15vh ">
+          <div className="items-center justify-center">
             <CopySection roomId={roomId} />
           </div>
 

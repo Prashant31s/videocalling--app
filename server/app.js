@@ -25,11 +25,11 @@ app.get("/", (req, res) => {
 
 io.on("connection", (socket) => {
   socket.on("username", (m) => {
-    //for chaecking the same username
-     if (!nameTaken(m.userName)) {
-      
-      socketidToUserNameMap.set(socket.id, m.userName);
-      socket.emit("approved username");
+    if (m.user.length == 0) {
+      socket.emit("duplicate username", m);
+    } else if (!nameTaken(m.user)) {
+      socketidToUserNameMap.set(socket.id, m.user);
+      socket.emit("username approved");
     } else {
       socket.emit("duplicate username", m);
     }
@@ -42,14 +42,16 @@ io.on("connection", (socket) => {
     socketidToUserMap.set(socket.id, userId);
     socketidtoRoomMap.set(socket.id, roomId);
     const uname = socketidToUserNameMap.get(socket.id);
-    roomuser.push({
-      room: roomId,
-      userid: userId,
-      sId: socket.id,
-      usname: uname,
-      video: true,
-      audio: true,
-    });
+    if (uname) {
+      roomuser.push({
+        room: roomId,
+        userid: userId,
+        sId: socket.id,
+        usname: uname,
+        video: true,
+        audio: true,
+      });
+    }
 
     if (!roomtohost[roomId]) {
       //for checking whether the room joined already have host user if not then make the user host of that room
@@ -68,16 +70,18 @@ io.on("connection", (socket) => {
         roomuser[i].audio = !roomuser[i].audio;
       }
     }
-    socket.broadcast.to(roomId).emit("user-toggle-audio", userId,roomuser);
+    socket.broadcast.to(roomId).emit("user-toggle-audio", userId, roomuser);
   });
-  socket.on ("host-toggle-audio",(userid,roomId)=>{
+
+  socket.on("host-toggle-audio", (userid, roomId) => {
     for (let i = 0; i < roomuser.length; i++) {
       if (roomuser[i].userid === userid) {
         roomuser[i].audio = !roomuser[i].audio;
       }
     }
-    io.in(roomId).emit("user-toggle-audio",userid,roomuser);
-  })
+    io.in(roomId).emit("user-toggle-audio", userid, roomuser);
+  });
+
   socket.on("user-toggle-video", (userId, roomId) => {
     // for telling the user in room that someone toggled its vedio and reflect the changes
     socket.join(roomId);
@@ -93,6 +97,17 @@ io.on("connection", (socket) => {
   socket.on("user-leave", (userId, roomId) => {
     //whenever a user leave it tells to the server its userid and roomid and then that message is broadcasted
     // to all participant in that room
+    if (roomtohost[roomId] === socket.id) {
+      // check if the user is host of any room if it is then make the second user who came into the room the new host of the room
+      for (let [key, value] of socketidtoRoomMap) {
+        if (value === roomId && key != socket.id) {
+          socketidtoRoomMap.delete(socket.id);
+          roomtohost[roomId] = key;
+          //
+          break;
+        }
+      }
+    }
     for (let i = 0; i < roomuser.length; i++) {
       if (roomuser[i].userid === userId) {
         //remove the socketid from that dataso that the updated data can be displayed at the client side
@@ -102,11 +117,14 @@ io.on("connection", (socket) => {
     socket.leave(roomId);
     socket.broadcast.to(roomId).emit("user-leave", userId);
     io.in(roomId).emit("data-update", roomuser, delete_socketid);
+    // io.in(roomId).emit("host-user", roomtohost[roomId], roomuser);
   });
+
   socket.on("removeuser", (userid, roomId) => {
     // if the host removed/kicked a user than it is told to the server that the userid of roomid has leaved the room
     const x = userid;
     let delete_socketid;
+
     for (let i = 0; i < roomuser.length; i++) {
       //data of that kicked user is removed from room useer
       if (roomuser[i].userid === x) {
@@ -115,9 +133,52 @@ io.on("connection", (socket) => {
       }
     }
 
+    if (roomtohost[roomId] === delete_socketid) {
+      // check if the user is host of any room if it is then make the second user who came into the room the new host of the room
+      for (let [key, value] of socketidtoRoomMap) {
+        if (value === roomId && key != delete_socketid) {
+          socketidtoRoomMap.delete(socket.id);
+          roomtohost[roomId] = key;
+          //
+          break;
+        }
+      }
+      io.in(roomId).emit("host-user", roomtohost[roomId], roomuser);
+    }
+
     io.in(roomId).emit("user-leave", userid); //all user are told in room that userid has leaved the room and changes at client side are made accordingly
     io.in(roomId).emit("data-update", roomuser, delete_socketid); // emit to update the list of users at client side
   });
+
+  socket.on("back-button-leave", (sid) => {
+    let uid;
+    let myroom;
+    for (let i = 0; i < roomuser.length; i++) {
+      //data of the user left
+      if (roomuser[i].sId === sid) {
+        uid = roomuser[i].userid;
+        myroom = roomuser[i].room;
+        roomuser.splice(i, 1);
+      }
+    }
+
+    if (roomtohost[myroom] === sid) {
+      // check if the user is host of any room if it is then make the second user who came into the room the new host of the room
+
+      for (let [key, value] of socketidtoRoomMap) {
+        if (value === myroom && key != sid) {
+          socketidtoRoomMap.delete(socket.id);
+          roomtohost[myroom] = key;
+          //
+          break;
+        }
+      }
+      io.in(myroom).emit("host-user", roomtohost[myroom], roomuser);
+    }
+    io.in(myroom).emit("user-leave", uid); //all user are told in room that userid has leaved the room and changes at client side are made accordingly
+    io.in(myroom).emit("data-update", roomuser, sid);
+  });
+
   socket.on("disconnect", () => {
     // if the user in a room disconnects
 
@@ -126,18 +187,23 @@ io.on("connection", (socket) => {
     let delete_socketid;
     if (roomtohost[curr_room] === socket.id) {
       // check if the user is host of any room if it is then make the second user who came into the room the new host of the room
+      let found = false;
       for (let [key, value] of socketidtoRoomMap) {
         if (value === curr_room && key != socket.id) {
           socketidtoRoomMap.delete(socket.id);
           roomtohost[curr_room] = key;
-          //
+          found = true;
           break;
         }
+      }
+      if (!found) {
+        delete roomtohost[curr_room];
       }
     }
     for (let i = 0; i < roomuser.length; i++) {
       if (roomuser[i].userid === userId) {
-        delete_socketid = roomuser[i].sId; //remove the socketid from that dataso that the updated data can be displayed at the client side
+        delete_socketid = roomuser[i].sId;
+        //remove the socketid from that dataso that the updated data can be displayed at the client side
 
         roomuser.splice(i, 1);
       }
@@ -149,10 +215,9 @@ io.on("connection", (socket) => {
 });
 
 function nameTaken(userName) {
-
-  for (let i=0;i<roomuser.length;i++) {
+  for (let i = 0; i < roomuser.length; i++) {
     // function to check the data that whether the name is present in data or not
-   
+
     if (roomuser[i].usname === userName) {
       return true;
     }
