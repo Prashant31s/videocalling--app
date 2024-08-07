@@ -15,7 +15,8 @@ module.exports = {
       colors: {
         prime: '#212529',
         secondary: '#343a40',
-        buttonPrimary: '#d90429'
+        buttonPrimary: '#d90429',
+        messages:'#555555'
       }
     },
   },

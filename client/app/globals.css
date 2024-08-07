@@ -29,6 +29,70 @@
   background-color: #000000;
 }
 
+.chatbox h1 {
+  /* //background-color: #333; */
+  text-align: center;
+  font-size: 1.5rem;
+  margin-bottom: 10px;
+  color: white;
+}
+
+/* Messages container */
+.message {
+  max-height: 50px; /* Set a fixed maximum height */
+  overflow-y: auto;
+ 
+  margin-left: 3px;
+}
+
+.message ul {
+  list-style-type: none;
+
+  margin-bottom: 0;
+  margin-left: 3px;
+}
+
+.message ul li {
+  background-color: #f0f0f0;
+  padding: 10px;
+  margin-bottom: 5px;
+  border-radius: 5px;
+}
+
+/* Message input form */
+
+
+
+
+/* Send message button */
+.form button {
+  padding: 10px 10px 10px 10px;
+  margin-left: 5px;
+  margin-bottom: 6px;
+  margin-top: 8px; 
+  margin-right:10px;
+  box-sizing: border-box;
+  font-size: 1rem;
+  
+
+  border: 2px solid;
+  border-radius: 25px;
+  background-color:#db2777 ;
+  
+  color: #000;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+
+
+.form button:hover {
+  background-color: #9d174d;
+}
+
+.word {
+  word-wrap: break-word;
+}
 
 
 

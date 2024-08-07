@@ -1,5 +1,5 @@
 import cx from "classnames";
-import { Video, VideoOff, ListCollapse, List } from "lucide-react";
+import { Video, VideoOff, ListCollapse, List, MessageSquareOff } from "lucide-react";
 
 import styles from "./index.module.css";
 
@@ -12,6 +12,9 @@ const Bottom = (props) => {
     leaveRoom,
     toggleDataList,
     showDataList,
+    shareScreen,
+    toggleChat,
+    showChat,
   } = props;
 
   return (
@@ -62,15 +65,64 @@ const Bottom = (props) => {
       {showDataList ? (
         <ListCollapse
           size={55}
-          className="bg-secondary rounded-full text-white p-[10px] cursor-pointer hover:bg-black"
+          className="bg-black rounded-full text-white p-[10px] cursor-pointer hover:bg-secondary"
           onClick={toggleDataList}
         />
       ) : (
         <List
           size={55}
-          className="bg-black rounded-full text-white p-[10px] cursor-pointer hover:bg-secondary"
+          className="bg-secondary rounded-full text-white p-[10px] cursor-pointer hover:bg-black"
           onClick={toggleDataList}
         />
+      )}
+
+      {showChat ? (
+        <button
+          className="rounded-full w-[55px] bg-black hover:bg-secondary items-center  p-3 text-white"
+          onClick={toggleChat}
+        >
+          <img
+            src={`https://cdn.iconscout.com/icon/premium/png-512-thumb/comment-balloon-off-slash-mute-8930794-7379670.png?f=webp&w=256`}
+            alt="button icon "
+            className={styles.whitesvg}
+          />
+        </button>
+      ) : (
+        // <MessageSquareOff/>
+        <button
+          className="rounded-full w-[55px] bg-secondary  hover:bg-black items-center  p-3 fill-white"
+          onClick={toggleChat}
+        >
+          <img
+            src={`https://www.svgrepo.com/show/500493/chat-dot-round.svg`}
+            alt="button icon"
+            className={styles.whitesvg}
+          />
+        </button>
+      )}
+
+      {shareScreen ? (
+        <button
+          className=" rounded-full w-[55px] bg-secondary items-center  p-3 fill-white hover:bg-black"
+          onClick={shareScreen}
+        >
+          <img
+            src={`https://static.thenounproject.com/png/4038430-200.png`}
+            alt="button icon"
+            className={styles.whitesvg}
+          />
+        </button>
+      ) : (
+        <button
+          className=" rounded-full w-[55px] bg-black items-center  p-3 fill-white hover:bg-secondary"
+          onClick={shareScreen}
+        >
+          <img
+            src={`https://static.thenounproject.com/png/4038430-200.png`}
+            alt="button icon"
+            className={styles.whitesvg}
+          />
+        </button>
       )}
     </div>
   );

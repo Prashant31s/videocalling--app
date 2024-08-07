@@ -7,7 +7,7 @@ import styles from "./index.module.css";
 
 const Player = (props) => {
   const { url, muted, playing, isActive, name } = props;
-
+  // console.log("url", url);
   return (
     <div
       className={cx(styles.playerContainer, {

@@ -50,6 +50,7 @@
 .whitesvg{
   filter: invert(1) brightness(100%);
 }
+
 .onePlayer {
   grid-template-columns: 1fr;
   grid-template-rows: 1fr;
@@ -69,6 +70,17 @@
   grid-template-rows: 1fr;
 
 }
+
+/* .screenTwo {
+  height: 100%;
+  width: 100%;
+  background-color: aqua;
+}
+.PlayerContainer.screentwo > :nth-child(1) {
+  width: 40%;
+  object-fit: cover;
+ 
+} */
 
 
 .threePlayers {
@@ -100,6 +112,7 @@
   
   
 }
+
 
 .PlayerContainer.fourPlayers >div,
 .PlayerContainer.fourPlayers video {
@@ -150,6 +163,71 @@
     border: 1px solid black;
     
     
+    
+  }
+
+  .chatcontainer{
+    display: flex;
+    flex-direction: column;
+    width:25%;
+    height: 100%;
+    background-color: #dbd7d2;
+    padding: 10px;
+    border-radius: 15px;
+    border: 1px solid black;
+    justify-content: end;
+  }
+
+  .chatArea {
+    display: flex;
+    flex-direction: column-reverse;
+    padding: 3;
+    margin-top: 3;
+    margin-right: 2;
+    margin-bottom: 10px;
+    overflow: auto;
+    
+  }
+
+  .form {
+    display: flex;
+    /* padding: 5px 5px 5px 5px; */
+    box-sizing: border-box;
+    /* //margin-top: 10px; */
+    /* margin-left: 2px;
+    margin-bottom: 3px; */
+  }
+
+  .form button {
+    padding: 10px 10px 10px 10px;
+    margin-left: 5px;
+    margin-bottom: 6px;
+    margin-top: 8px; 
+    
+    box-sizing: border-box;
+    font-size: 1rem;
+    
+  
+    border: 2px solid;
+    border-radius: 25px;
+    background-color: black ;
+    
+    
+    color: white;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+  }
+  .input {
+    flex: 1;
+    box-sizing: border-box;
+    padding: 10px;
+    font-size: 1rem;
+  
+    margin-bottom: 6px;
+    margin-top: 8px; 
+    margin-right: 2px;
+    border: 2px solid;
+    border-radius: 25px;
     
   }
   
