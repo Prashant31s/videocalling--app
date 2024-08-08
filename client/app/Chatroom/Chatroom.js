@@ -47,6 +47,7 @@ function Chatroom() {
   const [message, setMessage] = useState("");
   const [messages, setMessages] = useState([]);
   const [receiveuser, setReceiveuser] = useState("");
+  const [currscreenstream, setCurrScreenStream]=useState(null);
   const {
     players,
     setPlayers,
@@ -60,6 +61,7 @@ function Chatroom() {
   } = usePlayer(myId, roomId, peer);
 
   useEffect(() => {
+    
     history.listen((update) => {
       if (update.action === "POP") {
         if(screenStream){
@@ -72,7 +74,8 @@ function Chatroom() {
       }
     });
   }, [screenStream]);
-
+  
+  
   useEffect(() => {
     socket.emit("username", { user });
     socket.on("duplicate username", (m) => {
@@ -357,7 +360,9 @@ function Chatroom() {
 
     setMessage("");
   };
-
+  let xstream=null;
+  console.log("screenpeerid", screenpeerid ,myId);
+  
   const shareScreen = async () => {
     if (screenStream) {
       if (screenpeerid === myId) {
@@ -374,6 +379,8 @@ function Chatroom() {
           video: true,
         });
         setScreenStream(screenStreame);
+        xstream=screenStreame;
+        setCurrScreenStream(screenStreame);
         // if(scrShare){
         //   console.log("scrshare");
         // }
@@ -386,32 +393,60 @@ function Chatroom() {
     }
   };
   // console.log("final",screenStream);
+  if(screenStream){
+    screenStream.getVideoTracks()[0].onended = function () {
+      screenStream.getTracks().forEach((track) => track.stop());
+        setScreenStream(null);
+        socket.emit("stream-off", roomId);
+        setScrShare(false);
+    };
+  }
 
+  // const remove = ()=>{
+  //   currscreenstream.getTracks().forEach((track) => track.stop());
+  // }
+ 
   useEffect(() => {
     if (scrShare) {   
       socket.emit("screen-share", roomId, myId);
-      for (let i = 0; i < data.length; i++) {
-        if (data[i].peerId != myId && data[i].room === roomId) {
-          const call = peer.call(data[i].peerId, screenStream);
+      socket.on("answer", (allow,uid)=>{
+        console.log("ansss", allow);
+        if(allow&& uid===myId){
+          for (let i = 0; i < data.length; i++) {
+            if (data[i].peerId != myId && data[i].room === roomId) {
+              const call = peer.call(data[i].peerId, screenStream);
+            }
+          }
         }
-      }
+        else{
+          // remove();
+          console.log("acceess denied");
+          return;
+        }
+      })
+
+     
+      
+    }
+    return () => {
+      socket.off ("answer")
     }
   }, [scrShare, players]);
 
   if (length === 1 && !screenStream) {
     playerContainerClass += ` ${styles.onePlayer}`;
   } else if (
-    length === 2 && !screenStream
+    (length === 2 && !screenStream)||(length===1&&screenStream)
   ) {
     playerContainerClass += ` ${styles.twoPlayers}`;
   } else if (
-    (length === 3 && !screenStream) ||
-    (length === 2 && screenStream)
+    (length === 3 && !screenStream)
+    
   ) {
     playerContainerClass += ` ${styles.threePlayers}`;
   } else if (
-    (length === 4 && !screenStream) ||
-    (length === 3 && screenStream)
+    (length === 4 && !screenStream)
+    
   ) {
     playerContainerClass += ` ${styles.fourPlayers}`;
   } else if (length === 5) {
@@ -420,15 +455,16 @@ function Chatroom() {
     playerContainerClass += ` ${styles.sixPlayers}`;
   }
   else if(length===2 && screenStream){
-    playerContainerClass+= `${styles.screenTwo}`;
+    playerContainerClass+= ` ${styles.screenTwo}`;
 
   }
-  // else if(length===3 &&screenStream){
-  //   playerContainerClass+=`${styles.screenthree}`
-  // }
-  // else if(length===4 &&screenStream){
-  //   playerContainerClass+=`${styles.screenfour}`
-  // }
+  else if(length===3 &&screenStream){
+    playerContainerClass+=` ${styles.screenThree}`
+  }
+  else if(length===4 &&screenStream){
+    playerContainerClass+=` ${styles.screenFour}`
+  }
+  // console.log("pppp",playerContainerClass);
   return (
     <>
       <img
@@ -441,13 +477,19 @@ function Chatroom() {
           <div className={playerContainerClass}>
             {screenStream && (
               // console.log("fe",screenvideo.id)
-              <Player
-                url={screenStream}
+              <ReactPlayer
+              url={screenStream}
                 playing={true}
-
-                // width="100%"
-                // height="100%"
+                width="100%"
+            height="100%"
               />
+
+              // <Player
+                
+
+              //   // width="100%"
+              //   // height="100%"
+              // />
             )}
             {Object.keys(nonHighlightedPlayers).map((playerId, index) => {
               const { url, muted, playing } = nonHighlightedPlayers[playerId];
@@ -540,24 +582,35 @@ function Chatroom() {
                   {mesuser.map((msg, index) =>
                     msg.ruser == user ? (
                       <div className="bg-primary flex flex-col self-end max-w-60 pb-1 border-[1px] border-black rounded-[30px] bg-zinc-700">
-                        {/* <div className="bg-secondary pl-2 pr-3 py-1 rounded-2xl shadow-md text-wrap word h-auto text-white "> */}
+                        
                         <p className="text-wrap m-1 p-1  word text-white ">
                           {msg.nmessages}
                         </p>
-                        {/* </div> */}
+                      
                       </div>
                     ) : (
                       <div
                         key={index}
-                        className="bg-zinc-900 flex flex-col  max-w-60 border-[1px] border-text  w-fit rounded-2xl  p-2 m-1 text-white"
+                        className="bg-zinc-900 flex flex-col  max-w-60 border-[1.5px] border-white  w-fit rounded-2xl  p-2 m-1 text-white "
                       >
-                        {/* <span
-                      className={`pt-1 pl-1 pr-1 m-0.5 text-sm font-bold text-${getRandomColor} `}
-                    > */}
-                        {msg.ruser} :{/* </span> */}
-                        <span className=" bg-zinc-900  text-white  text-wrap word overflow-x-auto  pb-1 pt-1 rounded-2xl pl-0 ">
+                       {
+                        msg.ruser ===mesuser[index-1 >0 ? index-1:0].ruser && index!=0 ?(
+                          
+                          <span className=" bg-zinc-900  text-white  text-wrap word overflow-x-auto  pb-1 pt-1 rounded-2xl pl-0 ">
                           {msg.nmessages}
                         </span>
+                        ) :(
+                          <div>
+                            <h1 className="font-semibold text-red-200"> {msg.ruser} :</h1>   
+                        <span className=" bg-zinc-900  text-white  text-wrap word overflow-x-auto  pb-1 pt-1 rounded-2xl pl-0 ">
+                          
+                          {msg.nmessages}
+                        </span>
+                            </div>
+                          
+                        )
+                       }
+                        
                       </div>
                     )
                   )}

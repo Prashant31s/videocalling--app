@@ -203,14 +203,24 @@ io.on("connection", (socket) => {
     io.in(myroom).emit("data-update", roomuser, sid);
   });
   socket.on("screen-share", (roomId,myId) => {
-   
+    let index;
     const screenId=myId;
-    io.in(roomId).emit("share-screen",screenId);
+    let allow= true;
+    
     for(let i=0;i<roomuser.length;i++){
+      if(roomuser[i].screenshare&&roomId===roomuser[i].room){
+        allow=false;
+      }
       if(roomuser[i].peerId===myId){
-        roomuser[i].screenshare=true;
+        index=i;
       }
     }
+    if(allow){
+      console.log("cccc");
+      roomuser[index].screenshare=true;
+      io.in(roomId).emit("share-screen",screenId);
+    }
+    io.in(roomId).emit("answer",allow,myId);
   });
 
   socket.on("stream-off", (roomId)=>{
