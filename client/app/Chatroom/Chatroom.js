@@ -185,6 +185,7 @@ function Chatroom() {
       if (screenStream) {
         screenStream.getTracks().forEach((track) => track.stop());
         setScreenStream(null);
+        setCurrScreenStream(null);
         setScrShare(false);
       }
     };
@@ -248,18 +249,11 @@ function Chatroom() {
       call.answer(stream);
 
       call.on("stream", (incomingStream) => {
-        // console.log("incoming stream",incomingStream,data.length);
-
-        // console.log("lengthncomig cce",incomingStream.getVideoTracks().length)
-        // let screen=false;
-        // socket.on("screen-share",(data)=>{
-        //   console.log("chaaaaallll");
-        //   if(data.type==='screen'){
-        //     screen=true
-        //   }
-        // })
+      
         if (!check) {
+          console.log("incoming tream",incomingStream);
           setScreenStream(incomingStream);
+          setCurrScreenStream(incomingStream);
           check = true;
         } else {
           if (myId && callerId !== myidnew) {
@@ -368,6 +362,7 @@ function Chatroom() {
       if (screenpeerid === myId) {
         screenStream.getTracks().forEach((track) => track.stop());
         setScreenStream(null);
+        setCurrScreenStream(null);
         socket.emit("stream-off", roomId);
         setScrShare(false);
       }
@@ -380,7 +375,7 @@ function Chatroom() {
         });
         setScreenStream(screenStreame);
         xstream=screenStreame;
-        setCurrScreenStream(screenStreame);
+        
         // if(scrShare){
         //   console.log("scrshare");
         // }
@@ -397,6 +392,7 @@ function Chatroom() {
     screenStream.getVideoTracks()[0].onended = function () {
       screenStream.getTracks().forEach((track) => track.stop());
         setScreenStream(null);
+        setCurrScreenStream(null);
         socket.emit("stream-off", roomId);
         setScrShare(false);
     };
@@ -408,6 +404,12 @@ function Chatroom() {
  
   useEffect(() => {
     if (scrShare) {   
+      console.log("screeenstream",screenStream);
+      console.log("screeenstream",currscreenstream);
+      if(currscreenstream!=screenStream &&currscreenstream){
+        screenStream.getTracks().forEach((track) => track.stop());
+        setScreenStream(currscreenstream);
+      }
       socket.emit("screen-share", roomId, myId);
       socket.on("answer", (allow,uid)=>{
         console.log("ansss", allow);
@@ -578,7 +580,7 @@ function Chatroom() {
           {showChat && (
             <div className={styles.chatcontainer}>
               <div className="flex flex-col-reverse   mt-5 mr-1 ml-1 overflow-auto  scrollbar-thin scrollbar-thumb-rounded-sm scrollbar-thumb-black">
-                <div className="flex flex-col gap-3  ">
+                <div className="flex flex-col gap-2 ">
                   {mesuser.map((msg, index) =>
                     msg.ruser == user ? (
                       <div className="bg-primary flex flex-col self-end max-w-60 pb-1 border-[1px] border-black rounded-[30px] bg-zinc-700">
@@ -591,7 +593,7 @@ function Chatroom() {
                     ) : (
                       <div
                         key={index}
-                        className="bg-zinc-900 flex flex-col  max-w-60 border-[1.5px] border-white  w-fit rounded-2xl  p-2 m-1 text-white "
+                        className="bg-zinc-900 flex flex-col  max-w-60 border-[1.5px] border-white  w-fit rounded-2xl  p-2  text-white "
                       >
                        {
                         msg.ruser ===mesuser[index-1 >0 ? index-1:0].ruser && index!=0 ?(
