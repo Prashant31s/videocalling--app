@@ -8,12 +8,14 @@ import usePlayer from "../hooks/usePlayer";
 import Player from "../component/Player";
 import Bottom from "../component/Bottom";
 import CopySection from "../component/CopySection";
+import ScreenRecording from "../component/ScreenRecording"
 import styles from "./Chatroom.module.css";
 import { cloneDeep } from "lodash";
 import { Mic } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { createBrowserHistory } from "history";
 import ReactPlayer from "react-player";
+import { useReactMediaRecorder } from "react-media-recorder";
 
 function Chatroom() {
   const [scrShare, setScrShare] = useState(false);
@@ -37,9 +39,11 @@ function Chatroom() {
   const [showDataList, setShowDataList] = useState(false);
   const [showChat, setShowChat] = useState(false);
   const [screenStream, setScreenStream] = useState(null);
+  const [showScreen,setShowScreen]=useState(false);
 
   const [users, setUsers] = useState([]);
   const [myidnew, setMyidnew] = useState();
+  const [isrecording, setIsRecording] =useState(false);
   // let screenvideo;
   let playerContainerClass = styles.PlayerContainer;
 
@@ -59,6 +63,12 @@ function Chatroom() {
     showchat,
     // shareScreen
   } = usePlayer(myId, roomId, peer);
+
+
+  const { status, startRecording, stopRecording, mediaBlobUrl } =
+    useReactMediaRecorder({ screen: true });
+
+    const [isChecked, setIsChecked] = useState(false)
 
   useEffect(() => {
     
@@ -365,6 +375,7 @@ function Chatroom() {
         setCurrScreenStream(null);
         socket.emit("stream-off", roomId);
         setScrShare(false);
+        setShowScreen(false);
       }
 
       return;
@@ -379,6 +390,7 @@ function Chatroom() {
         // if(scrShare){
         //   console.log("scrshare");
         // }
+        setShowScreen(true);
         setScrShare(true);
         // socket.broadcast(roomId)emit("screen-share", screenStream);
         // socket.emit("screen-share",screenStreame,roomId);
@@ -387,7 +399,7 @@ function Chatroom() {
       }
     }
   };
-  // console.log("final",screenStream);
+  
   if(screenStream){
     screenStream.getVideoTracks()[0].onended = function () {
       screenStream.getTracks().forEach((track) => track.stop());
@@ -398,9 +410,7 @@ function Chatroom() {
     };
   }
 
-  // const remove = ()=>{
-  //   currscreenstream.getTracks().forEach((track) => track.stop());
-  // }
+
  
   useEffect(() => {
     if (scrShare) {   
@@ -409,6 +419,7 @@ function Chatroom() {
       if(currscreenstream!=screenStream &&currscreenstream){
         screenStream.getTracks().forEach((track) => track.stop());
         setScreenStream(currscreenstream);
+        setShowScreen(false);
       }
       socket.emit("screen-share", roomId, myId);
       socket.on("answer", (allow,uid)=>{
@@ -434,6 +445,34 @@ function Chatroom() {
       socket.off ("answer")
     }
   }, [scrShare, players]);
+  console.log("blobutfe", mediaBlobUrl);
+  const RecordingStop =()=>{
+    stopRecording();
+    setIsRecording(false);
+    console.log("bloburl22",mediaBlobUrl)
+  }
+  const RecordingStart=()=>{
+    startRecording();
+    setIsRecording(true);
+  }
+  const handleCheckboxChange = () => {
+    if(!isChecked){
+      startRecording();
+    }
+    else{
+      stopRecording();
+    }
+    setIsChecked(!isChecked)
+  }
+  // useEffect(()=>{
+  //   if(mediaBlobUrl){
+
+  //   }
+  //   else{
+
+  //   }
+
+  // },[mediaBlobUrl])
 
   if (length === 1 && !screenStream) {
     playerContainerClass += ` ${styles.onePlayer}`;
@@ -474,6 +513,50 @@ function Chatroom() {
         alt="button icon"
         className="absolute left-[70px] top-[2px] w-[65px]"
       />
+         <div className="absolute top-[3px] right-[10px] ">
+      {/* <p>{status}</p> */}
+      {/* {
+        isrecording ?(
+          <button onClick={RecordingStop}>stop</button>
+        ):(
+          <button className ="" onClick={RecordingStart}>Start</button>
+        )
+      } */}
+      {
+        mediaBlobUrl&& (
+          <button class=" hover:bg-gray-400 text-gray-800 font-bold  rounded inline-flex items-center">
+  
+  <span><a href={mediaBlobUrl} download="ScreenRecording"><svg class="fill-current w-4 h-4 mr-2" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><path d="M13 8V2H7v6H2l8 8 8-8h-5zM0 18h20v2H0v-2z"/></svg></a></span>
+</button>
+          
+        )
+      }
+      {/* <video src={mediaBlobUrl} controls autoPlay loop /> */}
+      <label className='autoSaverSwitch relative inline-flex cursor-pointer select-none items-center'>
+        <input
+          type='checkbox'
+          name='autoSaver'
+          className='sr-only'
+          checked={isChecked}
+          onChange={handleCheckboxChange}
+        />
+        <span
+          className={`slider mr-3 flex h-[26px] w-[50px] items-center rounded-full p-1 duration-200 ${
+            isChecked ? 'bg-red-500' : 'bg-[#CCCCCE]'
+          }`}
+        >
+          <span
+            className={`dot h-[18px] w-[18px] rounded-full bg-white duration-200 ${
+              isChecked ? 'translate-x-6' : ''
+            }`}
+          ></span>
+        </span>
+        <span className='label flex items-center text-sm font-medium text-black'>
+           {/* <span className='pl-1'> {isChecked ? 'Stop' : 'Start'} </span> */}
+        </span>
+      </label>
+      
+    </div>
       <div className={styles.main}>
         <div className={styles.toppart}>
           <div className={playerContainerClass}>
@@ -650,10 +733,12 @@ function Chatroom() {
             toggleDataList={toggleDataList}
             showDataList={showDataList}
             shareScreen={shareScreen}
+            showScreen ={showScreen}
             toggleChat={toggleChat}
             showChat={showChat}
           />
           {/* <ModeToggle/> */}
+       
         </div>
       </div>
     </>

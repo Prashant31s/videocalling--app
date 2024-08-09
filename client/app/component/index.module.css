@@ -9,7 +9,11 @@
   right: 0;
   left: 0;
   
-  
+  /* .micbutton {
+    width: 55px;
+    background-color: red;
+    hover
+  } */
   .icon {
     @apply rounded-full text-white ;
     padding: 10px;

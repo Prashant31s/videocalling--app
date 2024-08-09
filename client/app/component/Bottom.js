@@ -1,5 +1,11 @@
 import cx from "classnames";
-import { Video, VideoOff, ListCollapse, List, MessageSquareOff } from "lucide-react";
+import {
+  Video,
+  VideoOff,
+  ListCollapse,
+  List,
+  MessageSquareOff,
+} from "lucide-react";
 
 import styles from "./index.module.css";
 
@@ -13,14 +19,17 @@ const Bottom = (props) => {
     toggleDataList,
     showDataList,
     shareScreen,
+    showScreen,
     toggleChat,
     showChat,
   } = props;
+  console.log("sharescreeeen value", showScreen);
 
   return (
     <div className={styles.bottomMenu}>
       {muted ? (
         <button
+          title="Turn off mic"
           className="rounded-full w-[55px] bg-buttonPrimary hover:bg-secondary items-center  p-3 text-white"
           onClick={toggleAudio}
         >
@@ -32,6 +41,7 @@ const Bottom = (props) => {
         </button>
       ) : (
         <button
+          title="Turn on mic"
           className="rounded-full w-[55px] bg-secondary  hover:bg-buttonPrimary items-center  p-3 fill-white"
           onClick={toggleAudio}
         >
@@ -43,16 +53,34 @@ const Bottom = (props) => {
         </button>
       )}
       {playing ? (
-        <Video className={styles.icon} size={55} onClick={toggleVideo} />
-      ) : (
-        <VideoOff
-          className={cx(styles.icon, styles.active)}
-          size={55}
+        <button
+          className="rounded-full w-[55px] bg-secondary items-center  p-[12px] fill-white hover:bg-buttonPrimary"
+          title="Turn Off Video"
           onClick={toggleVideo}
-        />
+        >
+          <img
+            src={`https://www.svgrepo.com/show/521913/video-off.svg`}
+            alt="button icon"
+            className={styles.whitesvg}
+          />
+        </button>
+      ) : (
+        // <Video className={styles.icon} size={55} onClick={toggleVideo} />
+        <button
+          className="rounded-full w-[55px] bg-buttonPrimary items-center  p-2 fill-white hover:bg-secondary"
+          title="Turn On Video"
+          onClick={toggleVideo}
+        >
+          <img
+            src={`https://www.svgrepo.com/show/532727/video.svg`}
+            alt="button icon"
+            className={styles.whitesvg}
+          />
+        </button>
       )}
       <button
         className="rounded-full w-[55px] bg-secondary items-center  p-3 fill-white hover:bg-buttonPrimary"
+        title="End Call"
         onClick={leaveRoom}
       >
         <img
@@ -63,21 +91,34 @@ const Bottom = (props) => {
       </button>
 
       {showDataList ? (
-        <ListCollapse
-          size={55}
-          className="bg-black rounded-full text-white p-[10px] cursor-pointer hover:bg-secondary"
-          onClick={toggleDataList}
-        />
+       <button
+       title="Close Participants"
+       className="rounded-full w-[55px] bg-black hover:bg-secondary items-center  p-[8px] text-white"
+       onClick={toggleDataList}
+     >
+       <img
+         src={`https://www.svgrepo.com/show/525995/list-cross-minimalistic.svg`}
+         alt="button icon "
+         className={styles.whitesvg}
+       />
+     </button>
       ) : (
-        <List
-          size={55}
-          className="bg-secondary rounded-full text-white p-[10px] cursor-pointer hover:bg-black"
-          onClick={toggleDataList}
+        <button
+        title="Open Participants"
+        className="rounded-full w-[55px] bg-secondary hover:bg-black items-center  p-3 text-white"
+        onClick={toggleDataList}
+      >
+        <img
+          src={`https://www.svgrepo.com/show/532192/list.svg`}
+          alt="button icon "
+          className={styles.whitesvg}
         />
+      </button>
       )}
 
       {showChat ? (
         <button
+          title="Close Chat"
           className="rounded-full w-[55px] bg-black hover:bg-secondary items-center  p-3 text-white"
           onClick={toggleChat}
         >
@@ -90,6 +131,7 @@ const Bottom = (props) => {
       ) : (
         // <MessageSquareOff/>
         <button
+          title="Open Chat"
           className="rounded-full w-[55px] bg-secondary  hover:bg-black items-center  p-3 fill-white"
           onClick={toggleChat}
         >
@@ -101,8 +143,9 @@ const Bottom = (props) => {
         </button>
       )}
 
-      {shareScreen ? (
+      {!showScreen ? (
         <button
+          title="Start Screen Share"
           className=" rounded-full w-[55px] bg-secondary items-center  p-3 fill-white hover:bg-black"
           onClick={shareScreen}
         >
@@ -114,11 +157,12 @@ const Bottom = (props) => {
         </button>
       ) : (
         <button
+          title="Close Screen Share"
           className=" rounded-full w-[55px] bg-black items-center  p-3 fill-white hover:bg-secondary"
           onClick={shareScreen}
         >
           <img
-            src={`https://static.thenounproject.com/png/4038430-200.png`}
+            src={`https://www.svgrepo.com/show/310201/video-person-off.svg`}
             alt="button icon"
             className={styles.whitesvg}
           />

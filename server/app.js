@@ -66,7 +66,7 @@ io.on("connection", (socket) => {
     io.in(roomId).emit("host-user", roomtohost[roomId], roomuser); // tell the room participant that who is the host
   });
   socket.on("message", ({ message, roomId, user }) => {
-    console.log("heloooo", { message, roomId, user });
+   
     messageshistory.push({ nmessages: message, ruser: user, myroom:roomId });
 
     if (roomId) {
@@ -216,7 +216,7 @@ io.on("connection", (socket) => {
       }
     }
     if(allow){
-      console.log("cccc");
+      
       roomuser[index].screenshare=true;
       io.in(roomId).emit("share-screen",screenId);
     }
