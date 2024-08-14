@@ -100,12 +100,13 @@ io.on("connection", (socket) => {
     // for telling the user in room that someone toggled its vedio and reflect the changes
     socket.join(roomId);
     for (let i = 0; i < roomuser.length; i++) {
-      if (roomuser[i].userid === userId) {
+      if (roomuser[i].peerId === userId) {
         roomuser[i].video = !roomuser[i].video;
       }
     }
 
     socket.broadcast.to(roomId).emit("user-toggle-video", userId);
+    console.log(roomuser);
   });
 
   socket.on("user-leave", (userId, roomId) => {
@@ -231,6 +232,11 @@ io.on("connection", (socket) => {
         roomuser[i].screenshare=false;
       }
     }
+  })
+
+  socket.on("device-change",(peerid,roomId)=>{
+    console.log("grfdsc",peerid,roomId);
+    socket.broadcast.to(roomId).emit("device-changed",peerid,roomId);
   })
   socket.on("disconnect", () => {
     // if the user in a room disconnects

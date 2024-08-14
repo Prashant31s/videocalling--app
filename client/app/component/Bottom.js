@@ -23,7 +23,7 @@ const Bottom = (props) => {
     toggleChat,
     showChat,
   } = props;
-  console.log("sharescreeeen value", showScreen);
+  // console.log("sharescreeeen value", showScreen);
 
   return (
     <div className={styles.bottomMenu}>
