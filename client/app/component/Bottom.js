@@ -8,6 +8,8 @@ import {
 } from "lucide-react";
 
 import styles from "./index.module.css";
+import MediaComponent from "./MediaComponent";
+
 
 const Bottom = (props) => {
   const {
@@ -22,12 +24,18 @@ const Bottom = (props) => {
     showScreen,
     toggleChat,
     showChat,
+    data,
+    myId,
+    roomId,
+    peer,
+    setCurrStream
   } = props;
   // console.log("sharescreeeen value", showScreen);
 
   return (
     <div className={styles.bottomMenu}>
-      {muted ? (
+      <MediaComponent data= {data} myId={myId} roomId={roomId} peer ={peer} setCurrStream ={setCurrStream} muted={muted} playing ={playing} toggleAudio ={toggleAudio} toggleVideo={toggleVideo} />
+      {/* {muted ? (
         <button
           title="Turn off mic"
           className="rounded-full w-[55px] bg-buttonPrimary hover:bg-secondary items-center  p-3 text-white"
@@ -77,7 +85,7 @@ const Bottom = (props) => {
             className={styles.whitesvg}
           />
         </button>
-      )}
+      )} */}
       <button
         className="rounded-full w-[55px] bg-secondary items-center  p-3 fill-white hover:bg-buttonPrimary"
         title="End Call"

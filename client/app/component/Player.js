@@ -8,14 +8,20 @@ import { ReactMediaRecorder } from "react-media-recorder";
 import ReactPlayer from "react-player";
 
 const Player = (props) => {
-  const { url, muted, playing, isActive, name } = props;
+  const { playerId ,url, muted, playing, isActive, name, ishost,mictoggleuser} = props;
   const videoRef = useRef(null);
-
+  // if(isActive){
+  //   console.log("playerurl",url)
+  // }
+  
+  if(ishost){
+    console.log("i am host",playerId);
+  }
   useEffect(() => {
-    if (url instanceof MediaStream && videoRef.current) {
-      videoRef.current.srcObject = url;
+    if (videoRef.current) {
+      videoRef.current.srcObject = url; // Assign the MediaStream to the video element
     }
-  }, [url]);
+  }, [url,playing,muted]);
 
   return (
     <div
@@ -27,7 +33,7 @@ const Player = (props) => {
     >
       {playing ? (
         <>
-          {/* {url instanceof MediaStream ? (
+          {/* {url instanceof MediaStream ? ( */}
             <video
               ref={videoRef}
               muted={muted}
@@ -37,14 +43,15 @@ const Player = (props) => {
               height="100%"
               controls={false}
             />
-          ) : ( */}
-            <ReactPlayer
+          {/* ) : ( */}
+            {/* <ReactPlayer
+            key ={url}
               url={url}
               muted={muted}
               playing={playing}
               width="100%"
               height="100%"
-            />
+            /> */}
           {/* )} */}
           <p className={styles.username}>{name}</p>
         </>
@@ -56,11 +63,30 @@ const Player = (props) => {
       )}
 
       {!isActive ? (
-        muted ? (
-          <MicOff className={styles.icon2} size={20} />
-        ) : (
-          <Mic className={styles.icon2} size={20} />
-        )
+        
+          ishost ? (
+            muted ? (
+              <MicOff className={styles.icon2} size={20}  />
+            ) : (
+              <Mic className={styles.icon2} size={20} onClick={() => mictoggleuser(playerId)} />
+            )
+          //   <Mic
+          //   size={20}
+          //   className={styles.icon2}
+          //   onClick={() => mictoggleuser(item.userid)} //will exectute the remove user function for that kicked userid
+          // />
+
+          ):(
+            muted ? (
+              <MicOff className={styles.icon2} size={20} />
+            ) : (
+              <Mic className={styles.icon2} size={20} />
+            )
+
+          )
+        
+        
+        
       ) : undefined}
     </div>
   );
