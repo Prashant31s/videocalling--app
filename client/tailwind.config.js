@@ -16,7 +16,8 @@ module.exports = {
         prime: '#212529',
         secondary: '#343a40',
         buttonPrimary: '#d90429',
-        messages:'#555555'
+        messages:'#555555',
+        messageuse:'#C8C8C8'
       }
     },
   },

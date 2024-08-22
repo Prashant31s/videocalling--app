@@ -194,6 +194,7 @@ const MediaComponent = (props) => {
             />
           </button>
         )}
+        
         <select
           className="w-[55px] rounded-r-[55px] "
           onChange={(e) => setSelectedVideoDeviceId(e.target.value)}

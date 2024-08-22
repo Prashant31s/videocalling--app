@@ -34,24 +34,25 @@ const Player = (props) => {
       {playing ? (
         <>
           {/* {url instanceof MediaStream ? ( */}
-            <video
+            {/* <video
               ref={videoRef}
               muted={muted}
               autoPlay
               playsInline
               width="100%"
               height="100%"
+              
               controls={false}
-            />
+            /> */}
           {/* ) : ( */}
-            {/* <ReactPlayer
+            <ReactPlayer
             key ={url}
               url={url}
               muted={muted}
               playing={playing}
               width="100%"
               height="100%"
-            /> */}
+            />
           {/* )} */}
           <p className={styles.username}>{name}</p>
         </>

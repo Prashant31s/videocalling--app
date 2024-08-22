@@ -48,7 +48,7 @@ function Chatroom() {
 
   const [users, setUsers] = useState([]);
   const [myidnew, setMyidnew] = useState();
-  const [isrecording, setIsRecording] = useState(false);
+  // const [isrecording, setIsRecording] = useState(false);
   // let screenvideo;
   let playerContainerClass = styles.PlayerContainer;
 
@@ -64,10 +64,10 @@ function Chatroom() {
   const chunksRef = useRef([]);
   const [changedevice, setChangeDevice] = useState(false);
   const [devicechangepeerId, setDeviceChangePeerId] = useState();
-  const [devices, setDevices] = useState([]);
-  const [selectedDeviceId, setSelectedDeviceId] = useState("");
-  const [sstream, setSStream] = useState(null);
-  const [remoteStream, setRemoteStream] = useState(null);
+  // const [devices, setDevices] = useState([]);
+  // const [selectedDeviceId, setSelectedDeviceId] = useState("");
+  // const [sstream, setSStream] = useState(null);
+  // const [remoteStream, setRemoteStream] = useState(null);
   const [currstream, setCurrStream] = useState();
   const {
     players,
@@ -130,7 +130,7 @@ function Chatroom() {
       // setData(roomuser);
       const call = peer.call(newUser, stream);
       call.on("stream", (incomingStream) => {
-        setRemoteStream(incomingStream);
+        // setRemoteStream(incomingStream);
         //make a call to new user onnected and also recieve stream from it and set the user players of that room just add on the new user
         setPlayers((prev) => ({
           ...prev,
@@ -322,7 +322,7 @@ function Chatroom() {
                 playing: currvideo,
               },
             }));
-
+            console.log("players",players);
             setUsers((prev) => ({
               ...prev,
               [callerId]: call,
@@ -513,15 +513,15 @@ function Chatroom() {
   //   startRecording();
   //   setIsRecording(true);
   // }
-  // const handleCheckboxChange = () => {
-  //   if(!isChecked){
-  //     startRecording();
-  //   }
-  //   else{
-  //     stopRecording();
-  //   }
-  //   setIsChecked(!isChecked)
-  // }
+  const handleCheckboxChange = () => {
+    if(!isChecked){
+      startRecording();
+    }
+    else{
+      stopRecording();
+    }
+    
+  }
 
   const startRecording = async () => {
     try {
@@ -530,6 +530,7 @@ function Chatroom() {
         video: true,
         audio: true, // Request audio capture
         selfBrowserSurface: "include",
+        preferCurrentTab: true,
       });
 
       // Creating a MediaRecorder instance
@@ -547,10 +548,14 @@ function Chatroom() {
       mediaRecorder.onstop = () => {
         const blob = new Blob(chunksRef.current, { type: "video/webm" });
         const url = URL.createObjectURL(blob);
+        setIsChecked(false);
         setMediaBlobUrl(url);
         chunksRef.current = [];
         stream.getTracks().forEach(track => track.stop());
       };
+      mediaRecorder.onstart=()=>{
+        setIsChecked(true);
+      }
 
       mediaRecorder.start();
       setRecording(true);
@@ -626,71 +631,56 @@ function Chatroom() {
   // });
   // };
 
-  useEffect(() => {
-    // Function to get the list of audio input devices
-    const getDevices = async () => {
-      try {
-        const deviceInfos = await navigator.mediaDevices.enumerateDevices();
-        const audioDevices = deviceInfos.filter(
-          (device) => device.kind === "audioinput"
-        );
-        setDevices(audioDevices);
-      } catch (error) {
-        console.error("Error fetching devices:", error);
-      }
-    };
+ 
 
-    getDevices();
-  }, []);
+  // useEffect(() => {
+  //   // Function to start audio stream from selected device
+  //   // console.log("selectdeviceid",selectedDeviceId);
+  //   const startStream = async () => {
+  //     if (selectedDeviceId) {
+  //       try {
+  //         const newStream = await navigator.mediaDevices.getUserMedia({
+  //           video: true,
+  //           audio: {
+  //             deviceId: selectedDeviceId
+  //               ? { exact: selectedDeviceId }
+  //               : undefined,
+  //           },
+  //         });
+  //         setSStream(newStream);
+  //         // stream=newStream;
+  //       } catch (error) {
+  //         console.error("Error accessing the audio device:", error);
+  //       }
+  //     }
+  //   };
+  //   // console.log("newstrram",sstream);
+  //   startStream();
+  //   // console.log("nnnnnn",stream);
 
-  useEffect(() => {
-    // Function to start audio stream from selected device
-    // console.log("selectdeviceid",selectedDeviceId);
-    const startStream = async () => {
-      if (selectedDeviceId) {
-        try {
-          const newStream = await navigator.mediaDevices.getUserMedia({
-            video: true,
-            audio: {
-              deviceId: selectedDeviceId
-                ? { exact: selectedDeviceId }
-                : undefined,
-            },
-          });
-          setSStream(newStream);
-          // stream=newStream;
-        } catch (error) {
-          console.error("Error accessing the audio device:", error);
-        }
-      }
-    };
-    // console.log("newstrram",sstream);
-    startStream();
-    // console.log("nnnnnn",stream);
+  //   // Cleanup on component unmount
+  //   return () => {
+  //     if (sstream) {
+  //       // console.log("nnnnnn", stream);
+  //       sstream.getTracks().forEach((track) => track.stop());
+  //     }
+  //   };
+  // }, [selectedDeviceId]);
 
-    // Cleanup on component unmount
-    return () => {
-      if (sstream) {
-        // console.log("nnnnnn", stream);
-        sstream.getTracks().forEach((track) => track.stop());
-      }
-    };
-  }, [selectedDeviceId]);
+  // useEffect(() => {
+  //   // console.log("sssssstraeam", sstream);
+  //   // if(sstream){
+  //   if (sstream) {
+  //     socket.emit("device-change", myId, roomId);
+  //     for (let i = 0; i < data.length; i++) {
+  //       if (data[i].peerId != myId && data[i].room === roomId) {
+  //         const call = peer.call(data[i].peerId, sstream);
+  //       }
+  //     }
+  //   }
 
-  useEffect(() => {
-    // console.log("sssssstraeam", sstream);
-    // if(sstream){
-    if (sstream) {
-      socket.emit("device-change", myId, roomId);
-      for (let i = 0; i < data.length; i++) {
-        if (data[i].peerId != myId && data[i].room === roomId) {
-          const call = peer.call(data[i].peerId, sstream);
-        }
-      }
-    }
-
-    // setStream(sstream);
-  }, [sstream]);
+  //   // setStream(sstream);
+  // }, [sstream]);
   useEffect(() => {
     // console.log("FRFGRFS",currstream ,stream);
     // console.log("playerhighlighted", playerHighlighted);
@@ -762,7 +752,7 @@ function Chatroom() {
           </button>
         )}
         {/* <video src={mediaBlobUrl} controls autoPlay loop /> */}
-        {/* <label className='autoSaverSwitch relative inline-flex cursor-pointer select-none items-center'>
+        <label className='autoSaverSwitch relative inline-flex cursor-pointer select-none items-center'>
         <input
           type='checkbox'
           name='autoSaver'
@@ -781,20 +771,20 @@ function Chatroom() {
             }`}
           ></span>
         </span>
-        <span className='label flex items-center text-sm font-medium text-black'> */}
+        <span className='label flex items-center text-sm font-medium text-black'>
         {/* <span className='pl-1'> {isChecked ? 'Stop' : 'Start'} </span> */}
-        {/* </span>
-      </label> */}
-        <div className="absolute right-[5px] top-0 ">
+        </span>
+      </label>
+        {/* <div className="absolute right-[5px] top-0 ">
           {recording ? (
             <button onClick={stopRecording}>Stop </button>
           ) : (
             <button onClick={startRecording}>Start </button>
-          )}
+          )} */}
           {/* {mediaBlobUrl && (
         <a href={mediaBlobUrl} download="recording.webm">Download Recording</a>
       )} */}
-        </div>
+        {/* </div> */}
       </div>
       <div className={styles.main}>
         <div className={styles.toppart}>
@@ -915,8 +905,8 @@ function Chatroom() {
           )}
           {showChat && (
             <div className={styles.chatcontainer}>
-              <div className="flex flex-col-reverse   mt-5 mr-1 ml-1 overflow-auto  scrollbar-thin scrollbar-thumb-rounded-sm scrollbar-thumb-black">
-                <div className="flex flex-col gap-2 ">
+              <div className="flex flex-col-reverse   mt-5   overflow-auto  scrollbar-thin scrollbar-thumb-rounded-sm scrollbar-thumb-black">
+                <div className="flex flex-col gap-2 mr-[5px]">
                   {mesuser.map((msg, index) =>
                     msg.ruser == user ? (
                       <div className="bg-primary flex flex-col self-end max-w-60 pb-1 border-[1px] border-black rounded-[30px] bg-zinc-700">
@@ -937,7 +927,7 @@ function Chatroom() {
                           </span>
                         ) : (
                           <div>
-                            <h1 className="font-semibold text-red-200">
+                            <h1 className="font-semibold text-messageuse">
                               {" "}
                               {msg.ruser} :
                             </h1>
