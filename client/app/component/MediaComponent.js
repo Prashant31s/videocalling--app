@@ -2,6 +2,8 @@ import React, { useState, useEffect, useRef } from "react";
 import socket from "../components/connect";
 import ReactPlayer from "react-player";
 import styles from "./index.module.css";
+import { Menu, MenuButton, MenuItem, MenuItems } from '@headlessui/react'
+import { ChevronDownIcon } from '@heroicons/react/20/solid'
 
 const MediaComponent = (props) => {
   const [videoDevices, setVideoDevices] = useState([]);
@@ -119,6 +121,7 @@ const MediaComponent = (props) => {
       for (let i = 0; i < props.data.length; i++) {
         if (props.data[i].peerId !== peerid && props.data[i].room === room) {
           const call = props.peer.call(props.data[i].peerId, mediaStream);
+          console.log("changesssd");
           // Optionally handle `call` to manage the call, e.g., listen to events
         }
       }
@@ -126,100 +129,97 @@ const MediaComponent = (props) => {
   }, [mediaStream]);
 
   return (
-    <div className="flex flex-row gap-[15px]">
-      <div className="flex flex-row rounded-[110px] bg-white">
-        {muted ? (
-          <button
-            title="Turn off mic"
-            className="rounded-full w-[55px] bg-buttonPrimary hover:bg-secondary items-center  p-3 text-white"
-            onClick={toggleAudio}
-          >
-            <img
-              src={`https://www.svgrepo.com/show/448520/mic-off.svg`}
-              alt="button icon "
-              className={styles.whitesvg}
-            />
-          </button>
-        ) : (
-          <button
-            title="Turn on mic"
-            className="rounded-full w-[55px] bg-secondary  hover:bg-buttonPrimary items-center  p-3 fill-white"
-            onClick={toggleAudio}
-          >
-            <img
-              src={`https://www.svgrepo.com/show/448518/mic.svg`}
-              alt="button icon"
-              className={styles.whitesvg}
-            />
-          </button>
-        )}
-
-        <select
-          className="w-[55px] h-full rounded-r-[55px]"
-          onChange={(e) => setSelectedAudioDeviceId(e.target.value)}
-          value={selectedAudioDeviceId}
+    <div className="flex flex-row gap-3">
+      <div className="flex flex-row rounded-full bg-white items-center">
+        <button
+          title={muted ? "Turn on mic" : "Turn off mic"}
+          className={`rounded-full w-[55px] h-14  flex items-center justify-center ${muted ? 'bg-buttonPrimary' : 'bg-secondary'} p-[12px] hover:bg-buttonPrimary text-white`}
+          onClick={toggleAudio}
         >
-          {audioDevices.map((device) => (
-            <option key={device.deviceId} value={device.deviceId}>
-              {device.label || "Unknown Microphone"}
-            </option>
-          ))}
-        </select>
+          <img
+            src={`https://www.svgrepo.com/show/${muted ? '448520/mic-off' : '448518/mic'}.svg`}
+            alt="Mic Icon"
+            className={styles.whitesvg}
+          />
+        </button>
+
+        <Menu as="div" className="relative">
+          <MenuButton className="inline-flex items-center gap-x-1.5 rounded-r-full bg-white px-[2px] py-2 text-sm font-semibold text-gray-900 shadow-sm   hover:bg-gray-50">
+            
+            <ChevronDownIcon className="h-10 w-8 text-gray-600" />
+          </MenuButton>
+          <MenuItems
+            as="div"
+            className="absolute bottom-full right-0  w-56 origin-bottom-right rounded-md bg-white shadow-lg  focus:outline-none z-10"
+          >
+            <div className="">
+              {audioDevices.map((device) => (
+                <MenuItem key={device.deviceId} onClick={() => setSelectedAudioDeviceId(device.deviceId)}>
+                  {
+                    device.deviceId===selectedAudioDeviceId ? (
+                      <button className="block w-full px-4 py-2 text-sm text-black hover:bg-gray-100 bg-gray-200  border-gray-500 rounded-md">
+                      {device.label || "Unknown Microphone"}
+                    </button>
+                    ):(
+                      <button className="block w-full px-2 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-md">
+                      {device.label || "Unknown Microphone"}
+                    </button>
+                    )
+                  }
+                  
+                  
+                </MenuItem>
+              ))}
+            </div>
+          </MenuItems>
+        </Menu>
       </div>
 
-      <div className="flex flex-row rounded-full bg-white">
-        {playing ? (
-          <button
-            className="rounded-full w-[55px] bg-secondary items-center  p-[12px] fill-white hover:bg-buttonPrimary"
-            title="Turn Off Video"
-            onClick={toggleVideo}
-          >
-            <img
-              src={`https://www.svgrepo.com/show/521913/video-off.svg`}
-              alt="button icon"
-              className={styles.whitesvg}
-            />
-          </button>
-        ) : (
-          // <Video className={styles.icon} size={55} onClick={toggleVideo} />
-          <button
-            className="rounded-full w-[55px] bg-buttonPrimary items-center  p-2 fill-white hover:bg-secondary"
-            title="Turn On Video"
-            onClick={toggleVideo}
-          >
-            <img
-              src={`https://www.svgrepo.com/show/532727/video.svg`}
-              alt="button icon"
-              className={styles.whitesvg}
-            />
-          </button>
-        )}
-        
-        <select
-          className="w-[55px] rounded-r-[55px] "
-          onChange={(e) => setSelectedVideoDeviceId(e.target.value)}
-          value={selectedVideoDeviceId}
+      <div className="flex flex-row rounded-full bg-white items-center">
+        <button
+          className={`rounded-full w-[55px] h-14  flex items-center justify-center ${playing ? 'bg-secondary' : 'bg-buttonPrimary'} p-[12px] hover:bg-secondary text-white`}
+          title={playing ? "Turn Off Video" : "Turn On Video"}
+          onClick={toggleVideo}
         >
-          {videoDevices.map((device) => (
-            <option key={device.deviceId} value={device.deviceId}>
-              {device.label || "Unknown Camera"}
-            </option>
-          ))}
-        </select>
-      </div>
+          <img
+            src={`https://www.svgrepo.com/show/${playing ? '532727/video' : '521913/video-off'}.svg`}
+            alt="Video Icon"
+            className={styles.whitesvg}
+          />
+        </button>
 
-      {/* <h2>Video Output</h2> */}
-      {/* <ReactPlayer
-                url={videoRef}
-                playing={true}
-                width="100%"
-                height="100%"
-              /> */}
-      {/* <video
-        autoPlay
-        ref={videoRef}
-        style={{ width: '100%', height: 'auto' }}
-      /> */}
+        <Menu as="div" className="relative">
+          <MenuButton className="inline-flex items-center gap-x-1.5 rounded-r-full bg-white px-[2px] py-2 text-sm font-semibold text-gray-900 shadow-sm  hover:bg-gray-50">
+            {/* {videoDevices.find(d => d.deviceId === selectedVideoDeviceId)?.label || 'Select Video'} */}
+            <ChevronDownIcon className="h-10 w-8 text-gray-600" />
+          </MenuButton>
+          <MenuItems
+            as="div"
+            className="absolute bottom-full right-0 mt-1 w-56 origin-bottom-right rounded-md bg-white shadow-lg  focus:outline-none z-10"
+          >
+            <div className="">
+              {videoDevices.map((device) => (
+                <MenuItem key={device.deviceId} onClick={() => setSelectedVideoDeviceId(device.deviceId)}>
+                  {
+                    device.deviceId===selectedVideoDeviceId ?(
+                      <button className="block w-full px-4 py-2 text-sm text-black hover:bg-gray-100 bg-gray-200 rounded-md">
+                    {device.label || "Unknown Camera"}
+                  </button>
+                    ):(
+                      <button className="block w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-md">
+                    {device.label || "Unknown Camera"}
+                  </button>
+                    )
+                  }
+                  {/* <button className="block w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                    {device.label || "Unknown Camera"}
+                  </button> */}
+                </MenuItem>
+              ))}
+            </div>
+          </MenuItems>
+        </Menu>
+      </div>
     </div>
   );
 };

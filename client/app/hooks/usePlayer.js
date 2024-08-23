@@ -39,11 +39,12 @@ const usePlayer = (myId, roomId, peer) => {
 
       return { ...copy };
     });
+    console.log("playergrger",playerHighlighted);
     socket.emit("user-toggle-video", myId, roomId);
   };
 
   const toggleVideo = () => {
-    let timeoutId = setTimeout(toggleVideoo, 100);
+    let timeoutId = setTimeout(toggleVideoo, 10);
   };
 
 

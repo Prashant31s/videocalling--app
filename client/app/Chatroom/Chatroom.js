@@ -118,6 +118,10 @@ function Chatroom() {
     };
   }, [user, router]);
 
+  useEffect(()=>{
+    setCurrStream(stream);
+  },[])
+
   useEffect(() => {
     if (myId) {
       setMyidnew(myId);
@@ -128,8 +132,16 @@ function Chatroom() {
     const handleUserConnected = (newUser, roomtohost, roomuser) => {
       // console.log("connecteddddddd",roomuser);
       // setData(roomuser);
-      const call = peer.call(newUser, stream);
+      // let call
+      // if(currstream){
+        const call = peer.call(newUser, currstream);
+      // }
+      // else{
+        //  call = peer.call(newUser, stream);
+      // }
+      
       call.on("stream", (incomingStream) => {
+        console.log("handleuserconnected");
         // setRemoteStream(incomingStream);
         //make a call to new user onnected and also recieve stream from it and set the user players of that room just add on the new user
         setPlayers((prev) => ({
@@ -160,7 +172,7 @@ function Chatroom() {
     return () => {
       socket.off("user-connected", handleUserConnected);
     };
-  }, [peer, setPlayers, socket, stream, usernameApproved]);
+  }, [peer, setPlayers, socket, stream, usernameApproved,currstream]);
 
   const handleUserLeave = (userId) => {
     // fucntion to handle if a person has leaved the room
@@ -278,7 +290,7 @@ function Chatroom() {
     peer.on("call", (call) => {
       // the peer wiil make a call and also receive the call in the room and set the incoming stream in players so thatit can be shown
       const { peer: callerId } = call;
-      call.answer(stream);
+      call.answer(currstream);
 
       call.on("stream", (incomingStream) => {
         // console.log("i  bnjb", incomingStream,changedevice,devicechangepeerId);
@@ -298,7 +310,7 @@ function Chatroom() {
         // setChangeDevice(false);
 
         // }
-
+        console.log("dataaaaa",data);
         if (!check) {
           console.log("incoming tream", incomingStream);
           setScreenStream(incomingStream);
@@ -314,6 +326,7 @@ function Chatroom() {
                 curraudio = data[i].audio;
               }
             }
+            console.log("check",curraudio,currvideo);
             setPlayers((prev) => ({
               ...prev,
               [callerId]: {
@@ -339,7 +352,7 @@ function Chatroom() {
     players,
     myidnew,
     data,
-    devicechangepeerId,
+    
   ]);
   // useEffect(()=>{
   //   console.log("useffecr",players);
@@ -471,6 +484,7 @@ function Chatroom() {
       setCurrScreenStream(null);
       socket.emit("stream-off", roomId);
       setScrShare(false);
+      setShowScreen(false);
     };
   }
 
@@ -699,8 +713,7 @@ function Chatroom() {
   if (length === 1 && !screenStream) {
     playerContainerClass += ` ${styles.onePlayer}`;
   } else if (
-    (length === 2 && !screenStream) ||
-    (length === 1 && screenStream)
+    (length === 2 && !screenStream)
   ) {
     playerContainerClass += ` ${styles.twoPlayers}`;
   } else if (length === 3 && !screenStream) {
@@ -711,7 +724,11 @@ function Chatroom() {
     playerContainerClass += ` ${styles.fivePlayers}`;
   } else if (length === 6) {
     playerContainerClass += ` ${styles.sixPlayers}`;
-  } else if (length === 2 && screenStream) {
+  } 
+  else if(length===1 &&screenStream){
+    playerContainerClass += ` ${styles.screenOne}`;
+  }
+  else if (length === 2 && screenStream) {
     playerContainerClass += ` ${styles.screenTwo}`;
   } else if (length === 3 && screenStream) {
     playerContainerClass += ` ${styles.screenThree}`;

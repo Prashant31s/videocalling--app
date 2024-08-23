@@ -106,12 +106,13 @@ io.on("connection", (socket) => {
     }
 
     socket.broadcast.to(roomId).emit("user-toggle-video", userId);
-    console.log(roomuser);
+    console.log("viddd",roomuser);
   });
 
   socket.on("user-leave", (userId, roomId) => {
     //whenever a user leave it tells to the server its userid and roomid and then that message is broadcasted
     // to all participant in that room
+    console.log("ecxefe");
     if (roomtohost[roomId] === socket.id) {
       // check if the user is host of any room if it is then make the second user who came into the room the new host of the room
       for (let [key, value] of socketidtoRoomMap) {
@@ -235,12 +236,19 @@ io.on("connection", (socket) => {
   })
 
   socket.on("device-change",(peerid,roomId)=>{
-    console.log("grfdsc",peerid,roomId);
-    socket.broadcast.to(roomId).emit("device-changed",peerid,roomId);
+    console.log("grfdsc",peerid,roomId,roomuser);
+    for(let i=0;i<roomuser.length;i++){
+      if(roomuser[i].peerId===peerid){
+        roomuser[i].audio=true;
+        roomuser[i].video=true;
+      }
+    }
+    io.in(roomId).emit("data-update", roomuser);
+   io.in(roomId).emit("device-changed",peerid,roomId);
   })
   socket.on("disconnect", () => {
     // if the user in a room disconnects
-
+    // console.log("dissssssssssss");
     const curr_room = socketidtoRoomMap.get(socket.id); //get acess to the room from which it disconnected
     const userId = socketidToUserMap.get(socket.id); // get its userid from socketid
     let screenstatus=false;
