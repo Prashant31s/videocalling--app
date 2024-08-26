@@ -118,10 +118,6 @@ function Chatroom() {
     };
   }, [user, router]);
 
-  useEffect(()=>{
-    setCurrStream(stream);
-  },[])
-
   useEffect(() => {
     if (myId) {
       setMyidnew(myId);
@@ -132,16 +128,8 @@ function Chatroom() {
     const handleUserConnected = (newUser, roomtohost, roomuser) => {
       // console.log("connecteddddddd",roomuser);
       // setData(roomuser);
-      // let call
-      // if(currstream){
-        const call = peer.call(newUser, currstream);
-      // }
-      // else{
-        //  call = peer.call(newUser, stream);
-      // }
-      
+      const call = peer.call(newUser, stream);
       call.on("stream", (incomingStream) => {
-        console.log("handleuserconnected");
         // setRemoteStream(incomingStream);
         //make a call to new user onnected and also recieve stream from it and set the user players of that room just add on the new user
         setPlayers((prev) => ({
@@ -172,7 +160,7 @@ function Chatroom() {
     return () => {
       socket.off("user-connected", handleUserConnected);
     };
-  }, [peer, setPlayers, socket, stream, usernameApproved,currstream]);
+  }, [peer, setPlayers, socket, stream, usernameApproved]);
 
   const handleUserLeave = (userId) => {
     // fucntion to handle if a person has leaved the room
@@ -290,7 +278,7 @@ function Chatroom() {
     peer.on("call", (call) => {
       // the peer wiil make a call and also receive the call in the room and set the incoming stream in players so thatit can be shown
       const { peer: callerId } = call;
-      call.answer(currstream);
+      call.answer(stream);
 
       call.on("stream", (incomingStream) => {
         // console.log("i  bnjb", incomingStream,changedevice,devicechangepeerId);
@@ -310,13 +298,14 @@ function Chatroom() {
         // setChangeDevice(false);
 
         // }
-        console.log("dataaaaa",data);
+
         if (!check) {
           console.log("incoming tream", incomingStream);
           setScreenStream(incomingStream);
           setCurrScreenStream(incomingStream);
           check = true;
         } else {
+          console.log("data",data, players);
           if (myId && callerId !== myidnew) {
             let currvideo;
             let curraudio;
@@ -326,7 +315,6 @@ function Chatroom() {
                 curraudio = data[i].audio;
               }
             }
-            console.log("check",curraudio,currvideo);
             setPlayers((prev) => ({
               ...prev,
               [callerId]: {
@@ -352,7 +340,7 @@ function Chatroom() {
     players,
     myidnew,
     data,
-    
+    devicechangepeerId,
   ]);
   // useEffect(()=>{
   //   console.log("useffecr",players);
@@ -360,14 +348,24 @@ function Chatroom() {
 
   useEffect(() => {
     if (!usernameApproved || !stream || !myId) return;
+    console.log("datanewww",data);
+    let audiostatus=true;
+    let videostatus=true;
+
+    for (let i=0;i<data.length;i++){
+      if(data[i].peerId ===myId){
+        audiostatus =data[i].audio;
+        videostatus=data[i].video
+      }
+    }
     if (currstream) {
       setPlayers((prev) => ({
         //users stream will be set into the player
         ...prev,
         [myId]: {
           url: currstream,
-          muted: true,
-          playing: true,
+          muted: audiostatus,
+          playing: videostatus,
         },
       }));
     } else {
@@ -376,8 +374,8 @@ function Chatroom() {
         ...prev,
         [myId]: {
           url: stream,
-          muted: true,
-          playing: true,
+          muted: audiostatus,
+          playing: videostatus,
         },
       }));
     }
@@ -460,6 +458,7 @@ function Chatroom() {
       try {
         const screenStreame = await navigator.mediaDevices.getDisplayMedia({
           video: true,
+          
         });
         setScreenStream(screenStreame);
         xstream = screenStreame;
@@ -539,44 +538,77 @@ function Chatroom() {
 
   const startRecording = async () => {
     try {
-      // Requesting screen and audio capture
-      const stream = await navigator.mediaDevices.getDisplayMedia({
-        video: true,
-        audio: true, // Request audio capture
-        selfBrowserSurface: "include",
-        preferCurrentTab: true,
-      });
+        // Requesting screen capture
+        const screenStream = await navigator.mediaDevices.getDisplayMedia({
+            video: { mediaSource: "screen" },
+            audio: false, // Audio capture is not supported here
+            selfBrowserSurface: "include",
+            preferCurrentTab: true,
+        });
 
-      // Creating a MediaRecorder instance
-      const mediaRecorder = new MediaRecorder(stream);
-      mediaRecorderRef.current = mediaRecorder;
+        // Requesting audio capture
+        // const audioStream = await navigator.mediaDevices.getUserMedia({
+        //     audio: true,
+        //     video: false
+        // });
 
-      // Collecting chunks of data as they become available
-      mediaRecorder.ondataavailable = (event) => {
-        if (event.data.size > 0) {
-          chunksRef.current.push(event.data);
-        }
-      };
+        const audioStream = new MediaStream();
+        console.log("pppp",players);
 
-      // Creating a URL for the recorded video when recording stops
-      mediaRecorder.onstop = () => {
-        const blob = new Blob(chunksRef.current, { type: "video/webm" });
-        const url = URL.createObjectURL(blob);
-        setIsChecked(false);
-        setMediaBlobUrl(url);
-        chunksRef.current = [];
-        stream.getTracks().forEach(track => track.stop());
-      };
-      mediaRecorder.onstart=()=>{
-        setIsChecked(true);
-      }
+        Object.keys(players).map((playerId, index) => {
+          const { url, muted, playing } = players[playerId];
 
-      mediaRecorder.start();
-      setRecording(true);
+          url.getAudioTracks().forEach(track => audioStream.addTrack(track));
+        })
+       
+
+        // Combine the video and audio streams
+        console.log("audiostreamvideostrerseam",audioStream,screenStream);
+        const combinedStream = new MediaStream([
+            ...screenStream.getVideoTracks(),
+            ...audioStream.getAudioTracks()
+        ]);
+
+        // Creating a MediaRecorder instance
+        const mediaRecorder = new MediaRecorder(combinedStream);
+        mediaRecorderRef.current = mediaRecorder;
+
+        // Collecting chunks of data as they become available
+        mediaRecorder.ondataavailable = (event) => {
+            if (event.data.size > 0) {
+                chunksRef.current.push(event.data);
+            }
+        };
+
+        // Creating a URL for the recorded video when recording stops
+        mediaRecorder.onstop = () => {
+            const blob = new Blob(chunksRef.current, { type: "video/webm" });
+            const url = URL.createObjectURL(blob);
+            setIsChecked(false);
+            setMediaBlobUrl(url);
+            chunksRef.current = [];
+            screenStream.getTracks().forEach(track => track.stop());
+            audioStream.getTracks().forEach(track => track.stop());
+            combinedStream.getTracks().forEach(track => track.stop());
+        };
+
+        mediaRecorder.onstart = () => {
+            setIsChecked(true);
+        };
+        screenStream.oninactive = () => {
+          console.log('Screen sharing stopped by user.');
+          mediaRecorder.stop(); // Stop recording if sharing is stopped
+          setRecording(false);
+          setIsChecked(false);
+        };
+
+        mediaRecorder.start();
+        setRecording(true);
     } catch (error) {
-      console.error("Error starting screen recording:", error);
+        console.error("Error starting screen recording:", error);
     }
-  };
+};
+
   const stopRecording = () => {
     if (mediaRecorderRef.current) {
       // mediaRecorderRef.getTracks().forEach(track => track.stop());
@@ -713,7 +745,8 @@ function Chatroom() {
   if (length === 1 && !screenStream) {
     playerContainerClass += ` ${styles.onePlayer}`;
   } else if (
-    (length === 2 && !screenStream)
+    (length === 2 && !screenStream) ||
+    (length === 1 && screenStream)
   ) {
     playerContainerClass += ` ${styles.twoPlayers}`;
   } else if (length === 3 && !screenStream) {
@@ -724,11 +757,7 @@ function Chatroom() {
     playerContainerClass += ` ${styles.fivePlayers}`;
   } else if (length === 6) {
     playerContainerClass += ` ${styles.sixPlayers}`;
-  } 
-  else if(length===1 &&screenStream){
-    playerContainerClass += ` ${styles.screenOne}`;
-  }
-  else if (length === 2 && screenStream) {
+  } else if (length === 2 && screenStream) {
     playerContainerClass += ` ${styles.screenTwo}`;
   } else if (length === 3 && screenStream) {
     playerContainerClass += ` ${styles.screenThree}`;

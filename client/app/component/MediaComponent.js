@@ -64,6 +64,7 @@ const MediaComponent = (props) => {
     fetchDevices(); // Initial fetch
 
     const handleDeviceChange = () => {
+      console.log("device-change");
       fetchDevices();
     };
 
