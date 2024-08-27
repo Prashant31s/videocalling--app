@@ -34,7 +34,16 @@ const Bottom = (props) => {
 
   return (
     <div className={styles.bottomMenu}>
-      <MediaComponent data= {data} myId={myId} roomId={roomId} peer ={peer} setCurrStream ={setCurrStream} muted={muted} playing ={playing} toggleAudio ={toggleAudio} toggleVideo={toggleVideo} />
+      <MediaComponent data= {data} 
+      myId={myId} 
+      roomId={roomId}
+      peer ={peer} 
+      setCurrStream ={setCurrStream} 
+      muted={muted} 
+      playing ={playing} 
+      toggleAudio ={toggleAudio} 
+      toggleVideo={toggleVideo}
+      />
       {/* {muted ? (
         <button
           title="Turn off mic"

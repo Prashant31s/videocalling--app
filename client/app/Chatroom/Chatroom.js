@@ -20,7 +20,10 @@ import { useReactMediaRecorder } from "react-media-recorder";
 import AudioDeviceSelector from "../component/AudioDeviceSelector";
 import AudioVisualizer from "../component/AudioVisualiser";
 import AudioStream from "../component/AudioStream";
-import MediaComponent from "../component/MediaComponent";
+import MediaComponent from "../component/MediaComponent"
+
+import AudioStreamManager from "../component/AudioStreamManager"
+
 
 function Chatroom() {
   const [scrShare, setScrShare] = useState(false);
@@ -58,9 +61,9 @@ function Chatroom() {
   const [receiveuser, setReceiveuser] = useState("");
   const [currscreenstream, setCurrScreenStream] = useState(null);
 
-  const [recording, setRecording] = useState(false);
+  // const [recording, setRecording] = useState(false);
   const [mediaBlobUrl, setMediaBlobUrl] = useState(null);
-  const mediaRecorderRef = useRef(null);
+  // const mediaRecorderRef = useRef(null);
   const chunksRef = useRef([]);
   const [changedevice, setChangeDevice] = useState(false);
   const [devicechangepeerId, setDeviceChangePeerId] = useState();
@@ -80,6 +83,20 @@ function Chatroom() {
     showchat,
     // shareScreen
   } = usePlayer(myId, roomId, peer);
+
+  // const [combinedStream, setCombinedStream] = useState(null);
+  // const audioContextRef = useRef(null);
+  // const masterGainRef = useRef(null);
+  // const sourcesRef = useRef(new Map());
+
+  const [recording, setRecording] = useState(false);
+  const [recordedChunks, setRecordedChunks] = useState([]);
+  const audioContextRef = useRef(null);
+  const mediaStreamSourceNodesRef = useRef([]);
+  const mixerNodeRef = useRef(null);
+  const mediaRecorderRef = useRef(null);
+  const combinedStreamRef = useRef(null);
+  const [videostream,setVideoStream] = useState(null);
 
   // const { status, startRecording, stopRecording, mediaBlobUrl } =
   //   useReactMediaRecorder({ audio:false,screen: true  });
@@ -173,6 +190,7 @@ function Chatroom() {
     if (!socket || !usernameApproved) return;
     const handleToggleAudio = (userId, roomuser) => {
       //function to handle if someone has changed it audio int the room
+
       setData(roomuser);
       // console.log("ppppppppppp", players);
       setPlayers((prev) => {
@@ -180,6 +198,10 @@ function Chatroom() {
         copy[userId].muted = !copy[userId].muted;
         return { ...copy };
       });
+      if(isChecked){
+        handleMuteChange(userId,players[userId].muted);
+      }
+      
     };
 
     const handleToggleVideo = (userId) => {
@@ -300,12 +322,12 @@ function Chatroom() {
         // }
 
         if (!check) {
-          console.log("incoming tream", incomingStream);
+          // console.log("incoming tream", incomingStream);
           setScreenStream(incomingStream);
           setCurrScreenStream(incomingStream);
           check = true;
         } else {
-          console.log("data",data, players);
+          // console.log("data",data, players);
           if (myId && callerId !== myidnew) {
             let currvideo;
             let curraudio;
@@ -323,7 +345,7 @@ function Chatroom() {
                 playing: currvideo,
               },
             }));
-            console.log("players",players);
+            // console.log("players",players);
             setUsers((prev) => ({
               ...prev,
               [callerId]: call,
@@ -348,7 +370,7 @@ function Chatroom() {
 
   useEffect(() => {
     if (!usernameApproved || !stream || !myId) return;
-    console.log("datanewww",data);
+   
     let audiostatus=true;
     let videostatus=true;
 
@@ -379,7 +401,7 @@ function Chatroom() {
         },
       }));
     }
-  }, [usernameApproved, myId, setPlayers, , currstream]);
+  }, [usernameApproved, myId, setPlayers, , currstream,data]);
 
   useEffect(() => {
     if (!usernameApproved) return;
@@ -536,7 +558,228 @@ function Chatroom() {
     
   }
 
+  // useEffect(() => {
+  //   // Initialize AudioContext and GainNode
+  //   audioContextRef.current = new (window.AudioContext || window.webkitAudioContext)();
+  //   masterGainRef.current = audioContextRef.current.createGain();
+  //   masterGainRef.current.connect(audioContextRef.current.destination);
+
+  //   return () => {
+  //     // Cleanup on component unmount
+  //     if (audioContextRef.current) {
+  //       audioContextRef.current.close();
+  //     }
+  //   };
+  // }, []);
+  // useEffect(() => {
+  //   // Function to add audio tracks from MediaStreams
+  //   const addAudioStreams = () => {
+  //     Object.values(players).forEach(({ id, mediaStream, playing, muted }) => {
+  //       if (playing && !muted && !sourcesRef.current.has(id)) {
+  //         const audioTracks = mediaStream.getAudioTracks();
+  //         if (audioTracks.length > 0) {
+  //           const audioContext = audioContextRef.current;
+  //           const masterGain = masterGainRef.current;
+  //           const source = audioContext.createMediaStreamSource(mediaStream);
+  //           source.connect(masterGain);
+  //           sourcesRef.current.set(id, source);
+  //         }
+  //       }
+  //     });
+  //   };
+  //   // Function to remove audio tracks from MediaStreams
+  //   const removeAudioStreams = () => {
+  //     sourcesRef.current.forEach((source, id) => {
+  //       if (
+  //         !Object.values(players).some(
+  //           (player) => player.id === id && player.playing && !player.muted
+  //         )
+  //       ) {
+  //         source.disconnect(masterGainRef.current);
+  //         sourcesRef.current.delete(id);
+  //       }
+  //     });
+  //   };
+
+  //   // Add and remove audio streams based on `players` object
+  //   addAudioStreams();
+  //   removeAudioStreams();
+  // }, [players]);
+
+  // useEffect(() => {
+  //   // Initialize AudioContext and Mixer Node
+  //   audioContextRef.current = new (window.AudioContext || window.webkitAudioContext)();
+  //   mixerNodeRef.current = audioContextRef.current.createGain();
+  //   mixerNodeRef.current.connect(audioContextRef.current.destination);
+
+  //   return () => {
+  //     // Clean up resources on unmount
+  //     if (audioContextRef.current) {
+  //       audioContextRef.current.close();
+  //     }
+  //   };
+  // }, []);
+
+  // useEffect(() => {
+  //   if (players) {
+  //     // Cleanup previous connections
+  //     mediaStreamSourceNodesRef.current.forEach(node => node.disconnect());
+  //     mediaStreamSourceNodesRef.current = [];
+
+  //     // Setup audio streams
+  //     Object.keys(players).map((playerId, index) => {
+  //       const { url, muted, playing } = players[playerId];
+
+  //       const audioTracks= url.getAudioTracks();
+  //       if (audioTracks.length > 0 && !muted ) {
+  //         const audioStream = new MediaStream(audioTracks);
+  //         const sourceNode = audioContextRef.current.createMediaStreamSource(audioStream);
+  //         mediaStreamSourceNodesRef.current.push(sourceNode);
+  //         sourceNode.connect(mixerNodeRef.current);
+  //       }
+        
+  //     })
+  //     // players.forEach(stream => {
+  //     //   const sourceNode = audioContextRef.current.createMediaStreamSource(stream);
+  //     //   mediaStreamSourceNodesRef.current.push(sourceNode);
+  //     //   sourceNode.connect(mixerNodeRef.current);
+  //     // });
+  //   }
+  // }, [players]);
+
+  // useEffect(() => {
+  //   if (videostream) {
+  //     // Create a new MediaStream that includes both the mixed audio and the existing video
+  //     const combinedStream = new MediaStream();
+  //     combinedStreamRef.current = combinedStream;
+
+  //     // Add video tracks to the combined stream
+  //     videostream.getTracks().forEach(track => combinedStream.addTrack(track));
+
+  //     // Add mixed audio track to the combined stream
+  //     const mixedAudioStream = mixerNodeRef.current.stream;
+  //     mixerNodeRef.current.connect(audioContextRef.current.createMediaStreamDestination());
+  //     if (mixedAudioStream) {
+  //       mixedAudioStream.getAudioTracks().forEach(track => combinedStream.addTrack(track));
+  //     }
+
+  //     // Setup MediaRecorder
+  //     if (recording) {
+  //       const mediaRecorder = new MediaRecorder(combinedStream);
+  //       mediaRecorderRef.current = mediaRecorder;
+        
+  //       mediaRecorder.ondataavailable = event => {
+  //         if (event.data.size > 0) {
+  //           setRecordedChunks(prevChunks => [...prevChunks, event.data]);
+  //         }
+  //       };
+
+  //       mediaRecorder.start();
+  //     } else if (mediaRecorderRef.current) {
+  //       mediaRecorderRef.current.stop();
+  //     }
+  //   }
+  // }, [videostream, recording]);
+
+  // const handleStartRecording = async () => {
+  //   try {
+  //     // Requesting screen capture
+  //     const screenStream = await navigator.mediaDevices.getDisplayMedia({
+  //       video: { mediaSource: "screen" },
+  //       audio: false, // Audio capture is not supported here
+  //       selfBrowserSurface: "include",
+  //       preferCurrentTab: true,
+  //     });
+  //     setVideoStream(screenStream);
+  //     setRecording(true);
+  //   } catch (error) {
+  //     console.error("Error starting screen recording:", error);
+  //   }
+  // };
+
+  // const handleStopRecording = () => {
+  //   setRecording(false);
+  // };
+
+  // const handleDownload = () => {
+  //   if (recordedChunks.length > 0) {
+  //     const blob = new Blob(recordedChunks, { type: 'video/webm' });
+  //     const url = URL.createObjectURL(blob);
+  //     const a = document.createElement('a');
+  //     a.href = url;
+  //     a.download = 'combined-video.webm';
+  //     document.body.appendChild(a);
+  //     a.click();
+  //     document.body.removeChild(a);
+  //   }
+  // };
+  // let audioStreams = {}; 
+  let audioStreams = {}; // Declare and initialize at the top
+
+  const createSilentStream = () => {
+    const audioContext = new AudioContext();
+    const dest = audioContext.createMediaStreamDestination();
+    const buffer = audioContext.createBuffer(1, 1, audioContext.sampleRate);
+    const source = audioContext.createBufferSource();
+    source.buffer = buffer;
+    source.connect(dest);
+    source.start();
+    return dest.stream;
+};
+const updateAudioStreams = () => {
+  console.log("execurte");
+    const audioContext = new AudioContext();
+    const dest = audioContext.createMediaStreamDestination();
+    let hasAudio = false;
+    // Clear existing audio tracks
+    Object.values(audioStreams).forEach(stream => {
+        stream.getTracks().forEach(track => track.stop());
+    });
+
+    // Reset audioStreams
+    audioStreams = {};
+
+    Object.keys(players).forEach(playerId => {
+        const { url, muted } = players[playerId];
+        const stream = new MediaStream();
+
+        if (!muted) {
+            const audioTracks = url.getAudioTracks();
+            if (audioTracks.length > 0) {
+                audioTracks.forEach(track => {
+                    stream.addTrack(track);
+                });
+
+                // Save the stream
+                audioStreams[playerId] = stream;
+
+                // Create a MediaStreamSource and connect to destination
+                try {
+                    const source = audioContext.createMediaStreamSource(stream);
+                    source.connect(dest);
+                } catch (error) {
+                    console.error(`Failed to create MediaStreamSource for player ${playerId}:`, error);
+                }
+            } else {
+                console.warn(`Player ${playerId} has no audio tracks.`);
+            }
+        }
+    });
+    if (!hasAudio) {
+      // If no audio tracks, use a silent stream
+      const silentStream = createSilentStream();
+      const source = audioContext.createMediaStreamSource(silentStream);
+      source.connect(dest);
+  }
+
+    return dest;
+};
+ 
+  
   const startRecording = async () => {
+    
+   
+    // const dest = audioContext.createMediaStreamDestination();
     try {
         // Requesting screen capture
         const screenStream = await navigator.mediaDevices.getDisplayMedia({
@@ -546,27 +789,26 @@ function Chatroom() {
             preferCurrentTab: true,
         });
 
-        // Requesting audio capture
-        // const audioStream = await navigator.mediaDevices.getUserMedia({
-        //     audio: true,
-        //     video: false
+        const updateDest = updateAudioStreams();
+
+        // const audioStreams = Object.keys(players).map(playerId => {
+        //     const { url } = players[playerId];
+        //     const stream = new MediaStream();
+        //     url.getAudioTracks().forEach(track => stream.addTrack(track));
+        //     return stream;
         // });
 
-        const audioStream = new MediaStream();
-        console.log("pppp",players);
-
-        Object.keys(players).map((playerId, index) => {
-          const { url, muted, playing } = players[playerId];
-
-          url.getAudioTracks().forEach(track => audioStream.addTrack(track));
-        })
-       
-
+        // Create an audio destination to combine all audio streams
+        // audioStreams.forEach(stream => {
+        //     const source = audioContext.createMediaStreamSource(stream);
+        //     source.connect(dest);
+        // });
+        
         // Combine the video and audio streams
-        console.log("audiostreamvideostrerseam",audioStream,screenStream);
+        console.log("audiostreamvideostrerseam",updateDest);
         const combinedStream = new MediaStream([
             ...screenStream.getVideoTracks(),
-            ...audioStream.getAudioTracks()
+            ...updateDest.stream.getAudioTracks()
         ]);
 
         // Creating a MediaRecorder instance
@@ -588,7 +830,7 @@ function Chatroom() {
             setMediaBlobUrl(url);
             chunksRef.current = [];
             screenStream.getTracks().forEach(track => track.stop());
-            audioStream.getTracks().forEach(track => track.stop());
+            // Object.values(audioStreams).forEach(stream => stream.getTracks().forEach(track => track.stop()));
             combinedStream.getTracks().forEach(track => track.stop());
         };
 
@@ -608,7 +850,44 @@ function Chatroom() {
         console.error("Error starting screen recording:", error);
     }
 };
+  
+const handleMuteChange = (playerId, muted) => {
+  players[playerId].muted = muted;
 
+  // Update audio streams
+  const updatedAudioDest = updateAudioStreams();
+  
+  if (mediaRecorderRef.current && isChecked) {
+      // Stop the current media recorder and recreate with updated streams
+      mediaRecorderRef.current.stop();
+      mediaRecorderRef.current.onstop = null; // Clear existing handlers
+      mediaRecorderRef.current.stream.getTracks().forEach(track => track.stop()); // Stop old tracks
+
+      const screenStream = document.querySelector('video').srcObject;
+      const combinedStream = new MediaStream([
+          ...screenStream.getVideoTracks(), // Get updated screen video tracks
+          ...updatedAudioDest.stream.getAudioTracks()
+      ]);
+
+      mediaRecorderRef.current = new MediaRecorder(combinedStream);
+      mediaRecorderRef.current.ondataavailable = (event) => {
+          if (event.data.size > 0) {
+              chunksRef.current.push(event.data);
+          }
+      };
+
+      mediaRecorderRef.current.onstop = () => {
+          const blob = new Blob(chunksRef.current, { type: "video/webm" });
+          const url = URL.createObjectURL(blob);
+          setIsChecked(false);
+          setMediaBlobUrl(url);
+          chunksRef.current = [];
+          combinedStream.getTracks().forEach(track => track.stop());
+      };
+
+      mediaRecorderRef.current.start();
+  }
+};
   const stopRecording = () => {
     if (mediaRecorderRef.current) {
       // mediaRecorderRef.getTracks().forEach(track => track.stop());
@@ -1029,6 +1308,14 @@ function Chatroom() {
             setCurrStream={setCurrStream}
           />
           {/* <ModeToggle/> */}
+          {/* <AudioStreamManager players={players}/> */}
+          <div>
+      {/* <button onClick={handleStartRecording} disabled={recording}>Start Recording</button>
+      <button onClick={handleStopRecording} disabled={!recording}>Stop Recording</button>
+      {recordedChunks.length > 0 && (
+        <button onClick={handleDownload}>Download Video</button>
+      )} */}
+    </div>
         </div>
         <div>
           {/* <h1>Select an Audio Input Device</h1>

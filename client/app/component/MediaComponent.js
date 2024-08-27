@@ -34,7 +34,7 @@ const MediaComponent = (props) => {
       setAudioDevices(audio);
       let videodeviceremoved = true;
       let audiodeviceremoved = true;
-      console.log("audio",audio);
+      
       for (let i = 0; i < devices.length; i++) {
         if (devices.id === selectedAudioDeviceId) {
           audiodeviceremoved = false;
