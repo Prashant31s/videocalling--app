@@ -1,15 +1,5 @@
-import cx from "classnames";
-import {
-  Video,
-  VideoOff,
-  ListCollapse,
-  List,
-  MessageSquareOff,
-} from "lucide-react";
-
 import styles from "./index.module.css";
 import MediaComponent from "./MediaComponent";
-
 
 const Bottom = (props) => {
   const {
@@ -28,73 +18,23 @@ const Bottom = (props) => {
     myId,
     roomId,
     peer,
-    setCurrStream
+    setCurrStream,
   } = props;
-  // console.log("sharescreeeen value", showScreen);
 
   return (
     <div className={styles.bottomMenu}>
-      <MediaComponent data= {data} 
-      myId={myId} 
-      roomId={roomId}
-      peer ={peer} 
-      setCurrStream ={setCurrStream} 
-      muted={muted} 
-      playing ={playing} 
-      toggleAudio ={toggleAudio} 
-      toggleVideo={toggleVideo}
+      <MediaComponent
+        data={data}
+        myId={myId}
+        roomId={roomId}
+        peer={peer}
+        setCurrStream={setCurrStream}
+        muted={muted}
+        playing={playing}
+        toggleAudio={toggleAudio}
+        toggleVideo={toggleVideo}
       />
-      {/* {muted ? (
-        <button
-          title="Turn off mic"
-          className="rounded-full w-[55px] bg-buttonPrimary hover:bg-secondary items-center  p-3 text-white"
-          onClick={toggleAudio}
-        >
-          <img
-            src={`https://www.svgrepo.com/show/448520/mic-off.svg`}
-            alt="button icon "
-            className={styles.whitesvg}
-          />
-        </button>
-      ) : (
-        <button
-          title="Turn on mic"
-          className="rounded-full w-[55px] bg-secondary  hover:bg-buttonPrimary items-center  p-3 fill-white"
-          onClick={toggleAudio}
-        >
-          <img
-            src={`https://www.svgrepo.com/show/448518/mic.svg`}
-            alt="button icon"
-            className={styles.whitesvg}
-          />
-        </button>
-      )}
-      {playing ? (
-        <button
-          className="rounded-full w-[55px] bg-secondary items-center  p-[12px] fill-white hover:bg-buttonPrimary"
-          title="Turn Off Video"
-          onClick={toggleVideo}
-        >
-          <img
-            src={`https://www.svgrepo.com/show/521913/video-off.svg`}
-            alt="button icon"
-            className={styles.whitesvg}
-          />
-        </button>
-      ) : (
-        // <Video className={styles.icon} size={55} onClick={toggleVideo} />
-        <button
-          className="rounded-full w-[55px] bg-buttonPrimary items-center  p-2 fill-white hover:bg-secondary"
-          title="Turn On Video"
-          onClick={toggleVideo}
-        >
-          <img
-            src={`https://www.svgrepo.com/show/532727/video.svg`}
-            alt="button icon"
-            className={styles.whitesvg}
-          />
-        </button>
-      )} */}
+
       <button
         className="rounded-full w-[55px] bg-secondary items-center  p-3 fill-white hover:bg-buttonPrimary"
         title="End Call"
@@ -108,29 +48,29 @@ const Bottom = (props) => {
       </button>
 
       {showDataList ? (
-       <button
-       title="Close Participants"
-       className="rounded-full w-[55px] bg-black hover:bg-secondary items-center  p-[8px] text-white"
-       onClick={toggleDataList}
-     >
-       <img
-         src={`https://www.svgrepo.com/show/525995/list-cross-minimalistic.svg`}
-         alt="button icon "
-         className={styles.whitesvg}
-       />
-     </button>
+        <button
+          title="Close Participants"
+          className="rounded-full w-[55px] bg-black hover:bg-secondary items-center  p-[8px] text-white"
+          onClick={toggleDataList}
+        >
+          <img
+            src={`https://www.svgrepo.com/show/525995/list-cross-minimalistic.svg`}
+            alt="button icon "
+            className={styles.whitesvg}
+          />
+        </button>
       ) : (
         <button
-        title="Open Participants"
-        className="rounded-full w-[55px] bg-secondary hover:bg-black items-center  p-3 text-white"
-        onClick={toggleDataList}
-      >
-        <img
-          src={`https://www.svgrepo.com/show/532192/list.svg`}
-          alt="button icon "
-          className={styles.whitesvg}
-        />
-      </button>
+          title="Open Participants"
+          className="rounded-full w-[55px] bg-secondary hover:bg-black items-center  p-3 text-white"
+          onClick={toggleDataList}
+        >
+          <img
+            src={`https://www.svgrepo.com/show/532192/list.svg`}
+            alt="button icon "
+            className={styles.whitesvg}
+          />
+        </button>
       )}
 
       {showChat ? (
@@ -146,7 +86,6 @@ const Bottom = (props) => {
           />
         </button>
       ) : (
-        // <MessageSquareOff/>
         <button
           title="Open Chat"
           className="rounded-full w-[55px] bg-secondary  hover:bg-black items-center  p-3 fill-white"

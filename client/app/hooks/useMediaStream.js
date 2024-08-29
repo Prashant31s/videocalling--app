@@ -12,11 +12,11 @@ const useMediaStream = () => {
           audio: true,
           video: true,
         });
-        console.log("setting your stream"); 
+        console.log("setting your stream");
         setState(stream);
       } catch (e) {
         console.log("Error in media navigator", e);
-      } 
+      }
     })();
   }, []);
 

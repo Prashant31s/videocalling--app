@@ -24,9 +24,11 @@ const usePlayer = (myId, roomId, peer) => {
     console.log("I toggled my audio");
     setPlayers((prev) => {
       const copy = cloneDeep(prev);
+      copy[myId].url.getAudioTracks()[0].enabled = copy[myId].muted;
       copy[myId].muted = !copy[myId].muted;
       return { ...copy };
     });
+    
     socket.emit("user-toggle-audio", myId, roomId);
   };
 
@@ -39,14 +41,13 @@ const usePlayer = (myId, roomId, peer) => {
 
       return { ...copy };
     });
-    console.log("playergrger",playerHighlighted);
+    console.log("playergrger", playerHighlighted);
     socket.emit("user-toggle-video", myId, roomId);
   };
 
   const toggleVideo = () => {
     let timeoutId = setTimeout(toggleVideoo, 10);
   };
-
 
   return {
     players,
@@ -56,7 +57,6 @@ const usePlayer = (myId, roomId, peer) => {
     toggleAudio,
     toggleVideo,
     leaveRoom,
-    
   };
 };
 

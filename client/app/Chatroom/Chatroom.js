@@ -1,5 +1,5 @@
 "use client";
-import React, { useCallback, useEffect, useState, useRef } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import socket from "../components/connect";
 import { useSearchParams } from "next/navigation";
 import usePeer from "../hooks/usePeer";
@@ -8,22 +8,12 @@ import usePlayer from "../hooks/usePlayer";
 import Player from "../component/Player";
 import Bottom from "../component/Bottom";
 import CopySection from "../component/CopySection";
-import ScreenRecording from "../component/ScreenRecording";
 import styles from "./Chatroom.module.css";
 import { cloneDeep } from "lodash";
 import { Mic } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { createBrowserHistory } from "history";
 import ReactPlayer from "react-player";
-import { useReactMediaRecorder } from "react-media-recorder";
-// import {AudioDeviceSelector} from "../component/AudioDeviceSelector"
-import AudioDeviceSelector from "../component/AudioDeviceSelector";
-import AudioVisualizer from "../component/AudioVisualiser";
-import AudioStream from "../component/AudioStream";
-import MediaComponent from "../component/MediaComponent"
-
-import AudioStreamManager from "../component/AudioStreamManager"
-
 
 function Chatroom() {
   const [scrShare, setScrShare] = useState(false);
@@ -38,21 +28,16 @@ function Chatroom() {
   const [data, setData] = useState([]);
   const { peer, myId } = usePeer();
   const [length, setLength] = useState(0);
-  // const [isscreenavailable, setIsScreenAvailable] = useState(false);
   const [screenpeerid, setScreenPeerId] = useState();
   let check = true;
-
   const { stream } = useMediaStream();
   const [roomhost, setRoomhost] = useState();
   const [showDataList, setShowDataList] = useState(false);
   const [showChat, setShowChat] = useState(false);
   const [screenStream, setScreenStream] = useState(null);
   const [showScreen, setShowScreen] = useState(false);
-
   const [users, setUsers] = useState([]);
   const [myidnew, setMyidnew] = useState();
-  // const [isrecording, setIsRecording] = useState(false);
-  // let screenvideo;
   let playerContainerClass = styles.PlayerContainer;
 
   const [mesuser, setMesuser] = useState([]);
@@ -61,16 +46,12 @@ function Chatroom() {
   const [receiveuser, setReceiveuser] = useState("");
   const [currscreenstream, setCurrScreenStream] = useState(null);
 
-  // const [recording, setRecording] = useState(false);
   const [mediaBlobUrl, setMediaBlobUrl] = useState(null);
-  // const mediaRecorderRef = useRef(null);
   const chunksRef = useRef([]);
   const [changedevice, setChangeDevice] = useState(false);
   const [devicechangepeerId, setDeviceChangePeerId] = useState();
-  // const [devices, setDevices] = useState([]);
-  // const [selectedDeviceId, setSelectedDeviceId] = useState("");
-  // const [sstream, setSStream] = useState(null);
-  // const [remoteStream, setRemoteStream] = useState(null);
+
+  const finalDestRef = useRef(null);
   const [currstream, setCurrStream] = useState();
   const {
     players,
@@ -81,36 +62,27 @@ function Chatroom() {
     toggleVideo,
     leaveRoom,
     showchat,
-    // shareScreen
   } = usePlayer(myId, roomId, peer);
 
-  // const [combinedStream, setCombinedStream] = useState(null);
-  // const audioContextRef = useRef(null);
-  // const masterGainRef = useRef(null);
-  // const sourcesRef = useRef(new Map());
-
   const [recording, setRecording] = useState(false);
-  const [recordedChunks, setRecordedChunks] = useState([]);
-  const audioContextRef = useRef(null);
-  const mediaStreamSourceNodesRef = useRef([]);
-  const mixerNodeRef = useRef(null);
   const mediaRecorderRef = useRef(null);
-  const combinedStreamRef = useRef(null);
-  const [videostream,setVideoStream] = useState(null);
-
-  // const { status, startRecording, stopRecording, mediaBlobUrl } =
-  //   useReactMediaRecorder({ audio:false,screen: true  });
-
+  const audioContextRef = useRef(null); // Persistent AudioContext
+  const mediaStreamDestinationRef = useRef(null);
   const [isChecked, setIsChecked] = useState(false);
-  const videoRef = useRef(null);
-  let ishost=false;
+  let ishost = false;
+
+  useEffect(() => {
+    if (stream && players[myId]) {
+      stream.getAudioTracks()[0].enabled = !players[myId].muted;
+    }
+  }, [stream, players]);
+
   useEffect(() => {
     history.listen((update) => {
       if (update.action === "POP") {
         if (screenStream) {
           screenStream.getTracks().forEach((track) => track.stop());
           setScreenStream(null);
-          // socket.emit("stream-off", roomId);
           setScrShare(false);
         }
         socket.emit("back-button-leave", socket.id);
@@ -143,11 +115,8 @@ function Chatroom() {
   useEffect(() => {
     if (!socket || !peer || !stream || !usernameApproved) return;
     const handleUserConnected = (newUser, roomtohost, roomuser) => {
-      // console.log("connecteddddddd",roomuser);
-      // setData(roomuser);
       const call = peer.call(newUser, stream);
       call.on("stream", (incomingStream) => {
-        // setRemoteStream(incomingStream);
         //make a call to new user onnected and also recieve stream from it and set the user players of that room just add on the new user
         setPlayers((prev) => ({
           ...prev,
@@ -164,12 +133,7 @@ function Chatroom() {
         }));
       });
 
-      // for(let i=0;i<roomuser.length;i++){
-      //   console.log("newshacafefs",roomuser[i].sId,socket.id ,roomuser[i].screenshare);
-      //   if(roomuser[i].sId===socket.id &&roomuser[i].screenshare){
-      //     const call =peer.call(newUser,screenStream)
-      //     console.log("workinggggg",screenStream);
-      //   }
+      updateAudioStreams(); // Adjust this function to add the new stream to the recording
       // }
     };
     socket.on("user-connected", handleUserConnected); //a user is connected
@@ -192,16 +156,13 @@ function Chatroom() {
       //function to handle if someone has changed it audio int the room
 
       setData(roomuser);
-      // console.log("ppppppppppp", players);
       setPlayers((prev) => {
         const copy = cloneDeep(prev);
+        copy[userId].url.getAudioTracks()[0].enabled = copy[userId].muted;
         copy[userId].muted = !copy[userId].muted;
+
         return { ...copy };
       });
-      if(isChecked){
-        handleMuteChange(userId,players[userId].muted);
-      }
-      
     };
 
     const handleToggleVideo = (userId) => {
@@ -241,7 +202,6 @@ function Chatroom() {
     const handleHistory = (messageshistory) => {
       let mes = [];
       for (let i = 0; i < messageshistory.length; i++) {
-        //console.log("messagehistoryroom", messageshistory[i].nmessages,messageshistory[i].myroom, room);
         if (messageshistory[i].myroom == roomId) {
           mes.push({
             nmessages: messageshistory[i].nmessages,
@@ -303,31 +263,11 @@ function Chatroom() {
       call.answer(stream);
 
       call.on("stream", (incomingStream) => {
-        // console.log("i  bnjb", incomingStream,changedevice,devicechangepeerId);
-        // if(changedevice){
-        // console.log("changing",incomingStream,);
-        // console.log("players",players);
-        // if(videoRef.current){
-        //   videoRef.current.srcObject=incomingStream
-        // }
-
-        // setPlayers((prev) => {
-        //   const copy = cloneDeep(prev);
-        //   copy[devicechangepeerId].url= videoRef; // changing the video status of that user so that it can be reflected on the screen
-        //   return { ...copy };
-        // });
-        // console.log("after",players)
-        // setChangeDevice(false);
-
-        // }
-
         if (!check) {
-          // console.log("incoming tream", incomingStream);
           setScreenStream(incomingStream);
           setCurrScreenStream(incomingStream);
           check = true;
         } else {
-          // console.log("data",data, players);
           if (myId && callerId !== myidnew) {
             let currvideo;
             let curraudio;
@@ -345,7 +285,6 @@ function Chatroom() {
                 playing: currvideo,
               },
             }));
-            // console.log("players",players);
             setUsers((prev) => ({
               ...prev,
               [callerId]: call,
@@ -364,20 +303,17 @@ function Chatroom() {
     data,
     devicechangepeerId,
   ]);
-  // useEffect(()=>{
-  //   console.log("useffecr",players);
-  // },[players])
 
   useEffect(() => {
     if (!usernameApproved || !stream || !myId) return;
-   
-    let audiostatus=true;
-    let videostatus=true;
 
-    for (let i=0;i<data.length;i++){
-      if(data[i].peerId ===myId){
-        audiostatus =data[i].audio;
-        videostatus=data[i].video
+    let audiostatus = true;
+    let videostatus = true;
+
+    for (let i = 0; i < data.length; i++) {
+      if (data[i].peerId === myId) {
+        audiostatus = data[i].audio;
+        videostatus = data[i].video;
       }
     }
     if (currstream) {
@@ -401,7 +337,7 @@ function Chatroom() {
         },
       }));
     }
-  }, [usernameApproved, myId, setPlayers, , currstream,data]);
+  }, [usernameApproved, myId, setPlayers, , currstream, data]);
 
   useEffect(() => {
     if (!usernameApproved) return;
@@ -417,12 +353,6 @@ function Chatroom() {
       setLength(x);
       setData(ruser);
       setRoomhost(host);
-      
-      
-      // // screenStream.getTracks().forEach((track) => track.stop());
-      // // setScreenStream(null);
-      // // socket.emit("stream-off", roomId);
-      // setScrShare(false);
     };
     socket.on("host-user", handlehostuser);
     return () => {
@@ -462,7 +392,6 @@ function Chatroom() {
     setMessage("");
   };
   let xstream = null;
-  // console.log("screenpeerid", screenpeerid, myId);
 
   const shareScreen = async () => {
     if (screenStream) {
@@ -480,18 +409,11 @@ function Chatroom() {
       try {
         const screenStreame = await navigator.mediaDevices.getDisplayMedia({
           video: true,
-          
         });
         setScreenStream(screenStreame);
         xstream = screenStreame;
-
-        // if(scrShare){
-        //   console.log("scrshare");
-        // }
         setShowScreen(true);
         setScrShare(true);
-        // socket.broadcast(roomId)emit("screen-share", screenStream);
-        // socket.emit("screen-share",screenStreame,roomId);
       } catch (error) {
         console.error("Error sharing screen:", error);
       }
@@ -511,8 +433,6 @@ function Chatroom() {
 
   useEffect(() => {
     if (scrShare) {
-      console.log("screeenstream", screenStream);
-      console.log("screeenstream", currscreenstream);
       if (currscreenstream != screenStream && currscreenstream) {
         screenStream.getTracks().forEach((track) => track.stop());
         setScreenStream(currscreenstream);
@@ -520,7 +440,6 @@ function Chatroom() {
       }
       socket.emit("screen-share", roomId, myId);
       socket.on("answer", (allow, uid) => {
-        console.log("ansss", allow);
         if (allow && uid === myId) {
           for (let i = 0; i < data.length; i++) {
             if (data[i].peerId != myId && data[i].room === roomId) {
@@ -528,7 +447,6 @@ function Chatroom() {
             }
           }
         } else {
-          // remove();
           console.log("acceess denied");
           return;
         }
@@ -538,488 +456,130 @@ function Chatroom() {
       socket.off("answer");
     };
   }, [scrShare, players]);
-  // console.log("blobutfe", mediaBlobUrl);
-  // const RecordingStop =()=>{
-  //   stopRecording();
-  //   setIsRecording(false);
-  //   console.log("bloburl22",mediaBlobUrl)
-  // }
-  // const RecordingStart=()=>{
-  //   startRecording();
-  //   setIsRecording(true);
-  // }
+
   const handleCheckboxChange = () => {
-    if(!isChecked){
+    if (!isChecked) {
       startRecording();
-    }
-    else{
+    } else {
       stopRecording();
     }
-    
-  }
+  };
 
-  // useEffect(() => {
-  //   // Initialize AudioContext and GainNode
-  //   audioContextRef.current = new (window.AudioContext || window.webkitAudioContext)();
-  //   masterGainRef.current = audioContextRef.current.createGain();
-  //   masterGainRef.current.connect(audioContextRef.current.destination);
+  const updateAudioStreams = () => {
+    const dest = mediaStreamDestinationRef.current; // Use the existing MediaStreamDestination
 
-  //   return () => {
-  //     // Cleanup on component unmount
-  //     if (audioContextRef.current) {
-  //       audioContextRef.current.close();
-  //     }
-  //   };
-  // }, []);
-  // useEffect(() => {
-  //   // Function to add audio tracks from MediaStreams
-  //   const addAudioStreams = () => {
-  //     Object.values(players).forEach(({ id, mediaStream, playing, muted }) => {
-  //       if (playing && !muted && !sourcesRef.current.has(id)) {
-  //         const audioTracks = mediaStream.getAudioTracks();
-  //         if (audioTracks.length > 0) {
-  //           const audioContext = audioContextRef.current;
-  //           const masterGain = masterGainRef.current;
-  //           const source = audioContext.createMediaStreamSource(mediaStream);
-  //           source.connect(masterGain);
-  //           sourcesRef.current.set(id, source);
-  //         }
-  //       }
-  //     });
-  //   };
-  //   // Function to remove audio tracks from MediaStreams
-  //   const removeAudioStreams = () => {
-  //     sourcesRef.current.forEach((source, id) => {
-  //       if (
-  //         !Object.values(players).some(
-  //           (player) => player.id === id && player.playing && !player.muted
-  //         )
-  //       ) {
-  //         source.disconnect(masterGainRef.current);
-  //         sourcesRef.current.delete(id);
-  //       }
-  //     });
-  //   };
+    Object.keys(players).forEach((playerId) => {
+      const { url, muted } = players[playerId];
+      const stream = new MediaStream();
 
-  //   // Add and remove audio streams based on `players` object
-  //   addAudioStreams();
-  //   removeAudioStreams();
-  // }, [players]);
+      if (muted) {
+        url.getAudioTracks()[0].enabled = false;
+      } else {
+        url.getAudioTracks()[0].enabled = true;
+      }
 
-  // useEffect(() => {
-  //   // Initialize AudioContext and Mixer Node
-  //   audioContextRef.current = new (window.AudioContext || window.webkitAudioContext)();
-  //   mixerNodeRef.current = audioContextRef.current.createGain();
-  //   mixerNodeRef.current.connect(audioContextRef.current.destination);
-
-  //   return () => {
-  //     // Clean up resources on unmount
-  //     if (audioContextRef.current) {
-  //       audioContextRef.current.close();
-  //     }
-  //   };
-  // }, []);
-
-  // useEffect(() => {
-  //   if (players) {
-  //     // Cleanup previous connections
-  //     mediaStreamSourceNodesRef.current.forEach(node => node.disconnect());
-  //     mediaStreamSourceNodesRef.current = [];
-
-  //     // Setup audio streams
-  //     Object.keys(players).map((playerId, index) => {
-  //       const { url, muted, playing } = players[playerId];
-
-  //       const audioTracks= url.getAudioTracks();
-  //       if (audioTracks.length > 0 && !muted ) {
-  //         const audioStream = new MediaStream(audioTracks);
-  //         const sourceNode = audioContextRef.current.createMediaStreamSource(audioStream);
-  //         mediaStreamSourceNodesRef.current.push(sourceNode);
-  //         sourceNode.connect(mixerNodeRef.current);
-  //       }
-        
-  //     })
-  //     // players.forEach(stream => {
-  //     //   const sourceNode = audioContextRef.current.createMediaStreamSource(stream);
-  //     //   mediaStreamSourceNodesRef.current.push(sourceNode);
-  //     //   sourceNode.connect(mixerNodeRef.current);
-  //     // });
-  //   }
-  // }, [players]);
-
-  // useEffect(() => {
-  //   if (videostream) {
-  //     // Create a new MediaStream that includes both the mixed audio and the existing video
-  //     const combinedStream = new MediaStream();
-  //     combinedStreamRef.current = combinedStream;
-
-  //     // Add video tracks to the combined stream
-  //     videostream.getTracks().forEach(track => combinedStream.addTrack(track));
-
-  //     // Add mixed audio track to the combined stream
-  //     const mixedAudioStream = mixerNodeRef.current.stream;
-  //     mixerNodeRef.current.connect(audioContextRef.current.createMediaStreamDestination());
-  //     if (mixedAudioStream) {
-  //       mixedAudioStream.getAudioTracks().forEach(track => combinedStream.addTrack(track));
-  //     }
-
-  //     // Setup MediaRecorder
-  //     if (recording) {
-  //       const mediaRecorder = new MediaRecorder(combinedStream);
-  //       mediaRecorderRef.current = mediaRecorder;
-        
-  //       mediaRecorder.ondataavailable = event => {
-  //         if (event.data.size > 0) {
-  //           setRecordedChunks(prevChunks => [...prevChunks, event.data]);
-  //         }
-  //       };
-
-  //       mediaRecorder.start();
-  //     } else if (mediaRecorderRef.current) {
-  //       mediaRecorderRef.current.stop();
-  //     }
-  //   }
-  // }, [videostream, recording]);
-
-  // const handleStartRecording = async () => {
-  //   try {
-  //     // Requesting screen capture
-  //     const screenStream = await navigator.mediaDevices.getDisplayMedia({
-  //       video: { mediaSource: "screen" },
-  //       audio: false, // Audio capture is not supported here
-  //       selfBrowserSurface: "include",
-  //       preferCurrentTab: true,
-  //     });
-  //     setVideoStream(screenStream);
-  //     setRecording(true);
-  //   } catch (error) {
-  //     console.error("Error starting screen recording:", error);
-  //   }
-  // };
-
-  // const handleStopRecording = () => {
-  //   setRecording(false);
-  // };
-
-  // const handleDownload = () => {
-  //   if (recordedChunks.length > 0) {
-  //     const blob = new Blob(recordedChunks, { type: 'video/webm' });
-  //     const url = URL.createObjectURL(blob);
-  //     const a = document.createElement('a');
-  //     a.href = url;
-  //     a.download = 'combined-video.webm';
-  //     document.body.appendChild(a);
-  //     a.click();
-  //     document.body.removeChild(a);
-  //   }
-  // };
-  // let audioStreams = {}; 
-  let audioStreams = {}; // Declare and initialize at the top
-
-  const createSilentStream = () => {
-    const audioContext = new AudioContext();
-    const dest = audioContext.createMediaStreamDestination();
-    const buffer = audioContext.createBuffer(1, 1, audioContext.sampleRate);
-    const source = audioContext.createBufferSource();
-    source.buffer = buffer;
-    source.connect(dest);
-    source.start();
-    return dest.stream;
-};
-const updateAudioStreams = () => {
-  console.log("execurte");
-    const audioContext = new AudioContext();
-    const dest = audioContext.createMediaStreamDestination();
-    let hasAudio = false;
-    // Clear existing audio tracks
-    Object.values(audioStreams).forEach(stream => {
-        stream.getTracks().forEach(track => track.stop());
-    });
-
-    // Reset audioStreams
-    audioStreams = {};
-
-    Object.keys(players).forEach(playerId => {
-        const { url, muted } = players[playerId];
-        const stream = new MediaStream();
-
-        if (!muted) {
-            const audioTracks = url.getAudioTracks();
-            if (audioTracks.length > 0) {
-                audioTracks.forEach(track => {
-                    stream.addTrack(track);
-                });
-
-                // Save the stream
-                audioStreams[playerId] = stream;
-
-                // Create a MediaStreamSource and connect to destination
-                try {
-                    const source = audioContext.createMediaStreamSource(stream);
-                    source.connect(dest);
-                } catch (error) {
-                    console.error(`Failed to create MediaStreamSource for player ${playerId}:`, error);
-                }
-            } else {
-                console.warn(`Player ${playerId} has no audio tracks.`);
-            }
-        }
-    });
-    if (!hasAudio) {
-      // If no audio tracks, use a silent stream
-      const silentStream = createSilentStream();
-      const source = audioContext.createMediaStreamSource(silentStream);
-      source.connect(dest);
-  }
-
-    return dest;
-};
- 
-  
-  const startRecording = async () => {
-    
-   
-    // const dest = audioContext.createMediaStreamDestination();
-    try {
-        // Requesting screen capture
-        const screenStream = await navigator.mediaDevices.getDisplayMedia({
-            video: { mediaSource: "screen" },
-            audio: false, // Audio capture is not supported here
-            selfBrowserSurface: "include",
-            preferCurrentTab: true,
+      const audioTracks = url.getAudioTracks();
+      if (audioTracks.length > 0) {
+        audioTracks.forEach((track) => {
+          stream.addTrack(track);
         });
 
-        const updateDest = updateAudioStreams();
+        try {
+          const source =
+            audioContextRef.current.createMediaStreamSource(stream);
+          source.connect(dest); // Connect the new stream to the existing destination
+        } catch (error) {
+          console.error(
+            `Failed to create MediaStreamSource for player ${playerId}:`,
+            error
+          );
+        }
+      } else {
+        console.warn(`Player ${playerId} has no audio tracks.`);
+      }
+    });
 
-        // const audioStreams = Object.keys(players).map(playerId => {
-        //     const { url } = players[playerId];
-        //     const stream = new MediaStream();
-        //     url.getAudioTracks().forEach(track => stream.addTrack(track));
-        //     return stream;
-        // });
+    finalDestRef.current = dest;
+  };
 
-        // Create an audio destination to combine all audio streams
-        // audioStreams.forEach(stream => {
-        //     const source = audioContext.createMediaStreamSource(stream);
-        //     source.connect(dest);
-        // });
-        
-        // Combine the video and audio streams
-        console.log("audiostreamvideostrerseam",updateDest);
-        const combinedStream = new MediaStream([
-            ...screenStream.getVideoTracks(),
-            ...updateDest.stream.getAudioTracks()
-        ]);
-
-        // Creating a MediaRecorder instance
-        const mediaRecorder = new MediaRecorder(combinedStream);
-        mediaRecorderRef.current = mediaRecorder;
-
-        // Collecting chunks of data as they become available
-        mediaRecorder.ondataavailable = (event) => {
-            if (event.data.size > 0) {
-                chunksRef.current.push(event.data);
-            }
-        };
-
-        // Creating a URL for the recorded video when recording stops
-        mediaRecorder.onstop = () => {
-            const blob = new Blob(chunksRef.current, { type: "video/webm" });
-            const url = URL.createObjectURL(blob);
-            setIsChecked(false);
-            setMediaBlobUrl(url);
-            chunksRef.current = [];
-            screenStream.getTracks().forEach(track => track.stop());
-            // Object.values(audioStreams).forEach(stream => stream.getTracks().forEach(track => track.stop()));
-            combinedStream.getTracks().forEach(track => track.stop());
-        };
-
-        mediaRecorder.onstart = () => {
-            setIsChecked(true);
-        };
-        screenStream.oninactive = () => {
-          console.log('Screen sharing stopped by user.');
-          mediaRecorder.stop(); // Stop recording if sharing is stopped
-          setRecording(false);
-          setIsChecked(false);
-        };
-
-        mediaRecorder.start();
-        setRecording(true);
-    } catch (error) {
-        console.error("Error starting screen recording:", error);
+  const startRecording = async () => {
+    if (!audioContextRef.current) {
+      audioContextRef.current = new AudioContext();
     }
-};
-  
-const handleMuteChange = (playerId, muted) => {
-  players[playerId].muted = muted;
+    if (!mediaStreamDestinationRef.current) {
+      //destinationation to be connected with audio context
+      mediaStreamDestinationRef.current =
+        audioContextRef.current.createMediaStreamDestination();
+    }
 
-  // Update audio streams
-  const updatedAudioDest = updateAudioStreams();
-  
-  if (mediaRecorderRef.current && isChecked) {
-      // Stop the current media recorder and recreate with updated streams
-      mediaRecorderRef.current.stop();
-      mediaRecorderRef.current.onstop = null; // Clear existing handlers
-      mediaRecorderRef.current.stream.getTracks().forEach(track => track.stop()); // Stop old tracks
+    const screenStream = await navigator.mediaDevices.getDisplayMedia({
+      video: { mediaSource: "screen" },
+      audio: false,
+      selfBrowserSurface: "include",
+      preferCurrentTab: true,
+    });
 
-      const screenStream = document.querySelector('video').srcObject;
-      const combinedStream = new MediaStream([
-          ...screenStream.getVideoTracks(), // Get updated screen video tracks
-          ...updatedAudioDest.stream.getAudioTracks()
-      ]);
+    updateAudioStreams(); // Add all current streams to the ongoing recording
 
-      mediaRecorderRef.current = new MediaRecorder(combinedStream);
-      mediaRecorderRef.current.ondataavailable = (event) => {
-          if (event.data.size > 0) {
-              chunksRef.current.push(event.data);
-          }
-      };
+    const combinedStream = new MediaStream([
+      ...screenStream.getVideoTracks(),
+      ...mediaStreamDestinationRef.current.stream.getAudioTracks(),
+    ]);
 
-      mediaRecorderRef.current.onstop = () => {
-          const blob = new Blob(chunksRef.current, { type: "video/webm" });
-          const url = URL.createObjectURL(blob);
-          setIsChecked(false);
-          setMediaBlobUrl(url);
-          chunksRef.current = [];
-          combinedStream.getTracks().forEach(track => track.stop());
-      };
+    const mediaRecorder = new MediaRecorder(combinedStream);
+    mediaRecorderRef.current = mediaRecorder;
 
-      mediaRecorderRef.current.start();
-  }
-};
+    mediaRecorder.ondataavailable = (event) => {
+      if (event.data.size > 0) {
+        chunksRef.current.push(event.data);
+      }
+    };
+
+    mediaRecorder.onstop = () => {
+      const blob = new Blob(chunksRef.current, { type: "video/webm" });
+      const url = URL.createObjectURL(blob);
+      setMediaBlobUrl(url);
+      chunksRef.current = [];
+      setIsChecked(false);
+      screenStream.getTracks().forEach((track) => track.stop());
+      combinedStream.getTracks().forEach((track) => track.stop());
+    };
+
+    mediaRecorder.onstart = () => {
+      setIsChecked(true); //runs only when recording is started properly to change button state
+    };
+
+    screenStream.oninactive = () => {
+      mediaRecorder.stop();
+      setRecording(false);
+      setIsChecked(false);
+    };
+
+    mediaRecorder.start();
+    setRecording(true);
+  };
+
+  useEffect(() => {
+    if (isChecked) {
+      updateAudioStreams();
+    }
+  }, [players]);
+
   const stopRecording = () => {
     if (mediaRecorderRef.current) {
-      // mediaRecorderRef.getTracks().forEach(track => track.stop());
       mediaRecorderRef.current.stop();
       setRecording(false);
     }
   };
-  // if (!navigator.mediaDevices?.enumerateDevices) {
-  //   console.log("enumerateDevices() not supported.");
-  // } else {
-  //   // List cameras and microphones.
-  //   navigator.mediaDevices
-  //     .enumerateDevices()
-  //     .then((devices) => {
-  //       devices.forEach((device) => {
-  //         // console.log(`${device.kind}: ${device.label} id = ${device.deviceId}`);
-  //         if(device.kind ==='audioinput'){
-  //           console.log(device,device.length)
-  //         }
 
-  //       });
-  //     })
-  //     .catch((err) => {
-  //       console.error(`${err.name}: ${err.message}`);
-  //     });
-  // }
-
-  // useEffect(()=>{
-  //   if(mediaBlobUrl){
-
-  //   }
-  //   else{
-
-  //   }
-
-  // },[mediaBlobUrl])
-  // const [curraudiooutputdevice, setCurrAudioOutputDevice]=useState();
-  // let curraudiooutputdevice = "";
-  // const handleDeviceSelect = (deviceId) => {
-  //   setSelectedDeviceId(deviceId);
-  // };
-  // const audioOutputDevice = new Map();
-  // const audioInputDevice = new Map();
-  // const getAudioOutputDevice = async () => {
-  //   const devices = await navigator.mediaDevices.enumerateDevices();
-  //   for (const device of devices) {
-  //     if (device.kind == "audiooutput")
-  //       audioOutputDevice.set(device.deviceId, device);
-  //     if (device.kind == "audioinput")
-  //       audioInputDevice.set(device.deviceId, device);
-  //   }
-  //   console.log("output", audioOutputDevice);
-  //   console.log("input", audioInputDevice);
-  //   console.log("all devices", devices);
-
-  //   // setCurrAudioOutputDevice(audioOutputDevice);
-  //   setAudioOutputDevice();
-  //   curraudiooutputdevice = audioOutputDevice;
-  //   return audioOutputDevice;
-  // };
-  // const setAudioOutputDevice = (deviceId) => {
-  // console.log("fedfewsdefd", audioOutputDevice);
-  // const audioTags = document.getElementsByTagName("audio");
-  // audioTags.forEach((tag) => {
-  //   tag.setSinkId(deviceId);
-  // });
-  // };
-
- 
-
-  // useEffect(() => {
-  //   // Function to start audio stream from selected device
-  //   // console.log("selectdeviceid",selectedDeviceId);
-  //   const startStream = async () => {
-  //     if (selectedDeviceId) {
-  //       try {
-  //         const newStream = await navigator.mediaDevices.getUserMedia({
-  //           video: true,
-  //           audio: {
-  //             deviceId: selectedDeviceId
-  //               ? { exact: selectedDeviceId }
-  //               : undefined,
-  //           },
-  //         });
-  //         setSStream(newStream);
-  //         // stream=newStream;
-  //       } catch (error) {
-  //         console.error("Error accessing the audio device:", error);
-  //       }
-  //     }
-  //   };
-  //   // console.log("newstrram",sstream);
-  //   startStream();
-  //   // console.log("nnnnnn",stream);
-
-  //   // Cleanup on component unmount
-  //   return () => {
-  //     if (sstream) {
-  //       // console.log("nnnnnn", stream);
-  //       sstream.getTracks().forEach((track) => track.stop());
-  //     }
-  //   };
-  // }, [selectedDeviceId]);
-
-  // useEffect(() => {
-  //   // console.log("sssssstraeam", sstream);
-  //   // if(sstream){
-  //   if (sstream) {
-  //     socket.emit("device-change", myId, roomId);
-  //     for (let i = 0; i < data.length; i++) {
-  //       if (data[i].peerId != myId && data[i].room === roomId) {
-  //         const call = peer.call(data[i].peerId, sstream);
-  //       }
-  //     }
-  //   }
-
-  //   // setStream(sstream);
-  // }, [sstream]);
   useEffect(() => {
-    // console.log("FRFGRFS",currstream ,stream);
-    // console.log("playerhighlighted", playerHighlighted);
     if (playerHighlighted && currstream) {
       playerHighlighted.url = currstream;
-      // console.log("ghjkhbvjnkljbvbnkl")
     }
-    // console.log("playerhighlighted", playerHighlighted);
   }, [currstream]);
-  // useEffect(()=>{
-  //   console.log("updated");
-  // },[playerHighlighted])
-  if(socket.id===roomhost){
-    ishost=true;
+
+  if (socket.id === roomhost) {
+    ishost = true;
   }
   if (length === 1 && !screenStream) {
     playerContainerClass += ` ${styles.onePlayer}`;
@@ -1043,7 +603,7 @@ const handleMuteChange = (playerId, muted) => {
   } else if (length === 4 && screenStream) {
     playerContainerClass += ` ${styles.screenFour}`;
   }
-  // console.log("pppp",playerContainerClass);
+
   return (
     <>
       <img
@@ -1052,15 +612,6 @@ const handleMuteChange = (playerId, muted) => {
         className="absolute left-[70px] top-[2px] w-[65px]"
       />
       <div className="absolute top-[3px] right-[10px] ">
-        {/* <p>{status}</p> */}
-        {/* {
-        isrecording ?(
-          <button onClick={RecordingStop}>stop</button>
-        ):(
-          <button className ="" onClick={RecordingStart}>Start</button>
-        )
-      } */}
-
         {mediaBlobUrl && (
           <button class=" hover:bg-gray-400 text-gray-800 font-bold  rounded inline-flex items-center pr-[100px]">
             <span>
@@ -1076,66 +627,45 @@ const handleMuteChange = (playerId, muted) => {
             </span>
           </button>
         )}
-        {/* <video src={mediaBlobUrl} controls autoPlay loop /> */}
-        <label className='autoSaverSwitch relative inline-flex cursor-pointer select-none items-center'>
-        <input
-          type='checkbox'
-          name='autoSaver'
-          className='sr-only'
-          checked={isChecked}
-          onChange={handleCheckboxChange}
-        />
-        <span
-          className={`slider mr-3 flex h-[26px] w-[50px] items-center rounded-full p-1 duration-200 ${
-            isChecked ? 'bg-red-500' : 'bg-[#CCCCCE]'
-          }`}
-        >
+
+        <label className="autoSaverSwitch relative inline-flex cursor-pointer select-none items-center">
+          <input
+            type="checkbox"
+            name="autoSaver"
+            className="sr-only"
+            checked={isChecked}
+            onChange={handleCheckboxChange}
+          />
           <span
-            className={`dot h-[18px] w-[18px] rounded-full bg-white duration-200 ${
-              isChecked ? 'translate-x-6' : ''
+            className={`slider mr-3 flex h-[26px] w-[50px] items-center rounded-full p-1 duration-200 ${
+              isChecked ? "bg-red-500" : "bg-[#CCCCCE]"
             }`}
-          ></span>
-        </span>
-        <span className='label flex items-center text-sm font-medium text-black'>
-        {/* <span className='pl-1'> {isChecked ? 'Stop' : 'Start'} </span> */}
-        </span>
-      </label>
-        {/* <div className="absolute right-[5px] top-0 ">
-          {recording ? (
-            <button onClick={stopRecording}>Stop </button>
-          ) : (
-            <button onClick={startRecording}>Start </button>
-          )} */}
-          {/* {mediaBlobUrl && (
-        <a href={mediaBlobUrl} download="recording.webm">Download Recording</a>
-      )} */}
-        {/* </div> */}
+          >
+            <span
+              className={`dot h-[18px] w-[18px] rounded-full bg-white duration-200 ${
+                isChecked ? "translate-x-6" : ""
+              }`}
+            ></span>
+          </span>
+          <span className="label flex items-center text-sm font-medium text-black"></span>
+        </label>
       </div>
       <div className={styles.main}>
         <div className={styles.toppart}>
           <div className={playerContainerClass}>
             {screenStream && (
-              // console.log("fe",screenvideo.id)
-
               <ReactPlayer
                 url={screenStream}
                 playing={true}
                 width="100%"
                 height="100%"
               />
-
-              // <Player
-
-              //   // width="100%"
-              //   // height="100%"
-              // />
             )}
             {Object.keys(nonHighlightedPlayers).map((playerId, index) => {
               const { url, muted, playing } = nonHighlightedPlayers[playerId];
 
               return (
                 <>
-                  {/* {console.log("frfsfsd",url)} */}
                   <Player
                     playerId={playerId}
                     url={url}
@@ -1143,7 +673,7 @@ const handleMuteChange = (playerId, muted) => {
                     playing={playing}
                     isActive={false}
                     name={data.find((item) => item.peerId === playerId)?.usname}
-                    ishost ={ishost}
+                    ishost={ishost}
                     mictoggleuser={mictoggleuser}
                   />
                 </>
@@ -1151,16 +681,6 @@ const handleMuteChange = (playerId, muted) => {
             })}
 
             {playerHighlighted && (
-              // currstream ?(
-
-              //   <Player
-              //   url={currstream}
-              //   muted={playerHighlighted.muted}
-              //   playing={playerHighlighted.playing}
-              //   isActive={true}
-              //   name="Me"
-              //   />
-              // ):(
               <Player
                 url={playerHighlighted.url}
                 muted={playerHighlighted.muted}
@@ -1170,9 +690,6 @@ const handleMuteChange = (playerId, muted) => {
               />
               // )
             )}
-            {/* <div>
-              {screenvideo}
-            </div> */}
           </div>
           {showDataList && (
             <div className={styles.datalist}>
@@ -1307,44 +824,6 @@ const handleMuteChange = (playerId, muted) => {
             peer={peer}
             setCurrStream={setCurrStream}
           />
-          {/* <ModeToggle/> */}
-          {/* <AudioStreamManager players={players}/> */}
-          <div>
-      {/* <button onClick={handleStartRecording} disabled={recording}>Start Recording</button>
-      <button onClick={handleStopRecording} disabled={!recording}>Stop Recording</button>
-      {recordedChunks.length > 0 && (
-        <button onClick={handleDownload}>Download Video</button>
-      )} */}
-    </div>
-        </div>
-        <div>
-          {/* <h1>Select an Audio Input Device</h1>
-          <div>
-            <label htmlFor="device-select">Select Audio Input Device:</label>
-            <select
-              id="device-select"
-              value={selectedDeviceId}
-              onChange={(e) => setSelectedDeviceId(e.target.value)}
-            >
-              <option value="">Default</option>
-              {devices.map((device) => (
-                <option key={device.deviceId} value={device.deviceId}>
-                  {device.label || `Device ${device.deviceId}`}
-                </option>
-              ))}
-            </select>
-          </div> */}
-          {/* <MediaComponent data= {data} myId={myId} roomId={roomId} peer ={peer} setCurrStream ={setCurrStream}/> */}
-
-          {/* <AudioStream deviceId={selectedDeviceId} />
-           */}
-          {/* <button onClick={getAudioOutputDevice}>output</button>  */}
-          {/* <AudioVisualizer /> */}
-          {/* <video
-        autoPlay
-        ref={videoRef}
-        style={{ width: '100%', height: 'auto' }}
-      /> */}
         </div>
       </div>
     </>

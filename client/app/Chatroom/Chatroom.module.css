@@ -290,6 +290,8 @@
 .chatcontainer {
   display: flex;
   flex-direction: column;
+  min-width: 25%;
+  max-width: 25%;
   width: 25%;
   height: 100%;
   background-color: #dbd7d2;

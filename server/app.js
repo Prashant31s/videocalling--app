@@ -10,15 +10,13 @@ const roomtohost = {};
 const socketidtoRoomMap = new Map();
 const socketidToUserMap = new Map();
 const socketidToUserNameMap = new Map();
-const peerIdToscreen =new Map();
+const peerIdToscreen = new Map();
 let users = {};
 const messageshistory = [];
 
 const io = new Server(server, {
   cors: {
     origin: "*",
-    // method: ["GET", "POST"],
-    // credentials: true,
   },
 });
 
@@ -53,7 +51,7 @@ io.on("connection", (socket) => {
         usname: uname,
         video: true,
         audio: true,
-        screenshare:false,
+        screenshare: false,
       });
     }
 
@@ -66,8 +64,7 @@ io.on("connection", (socket) => {
     io.in(roomId).emit("host-user", roomtohost[roomId], roomuser); // tell the room participant that who is the host
   });
   socket.on("message", ({ message, roomId, user }) => {
-   
-    messageshistory.push({ nmessages: message, ruser: user, myroom:roomId });
+    messageshistory.push({ nmessages: message, ruser: user, myroom: roomId });
 
     if (roomId) {
       const x = messageshistory.length;
@@ -106,13 +103,12 @@ io.on("connection", (socket) => {
     }
 
     socket.broadcast.to(roomId).emit("user-toggle-video", userId);
-    console.log("viddd",roomuser);
   });
 
   socket.on("user-leave", (userId, roomId) => {
     //whenever a user leave it tells to the server its userid and roomid and then that message is broadcasted
     // to all participant in that room
-    console.log("ecxefe");
+
     if (roomtohost[roomId] === socket.id) {
       // check if the user is host of any room if it is then make the second user who came into the room the new host of the room
       for (let [key, value] of socketidtoRoomMap) {
@@ -140,13 +136,13 @@ io.on("connection", (socket) => {
     // if the host removed/kicked a user than it is told to the server that the userid of roomid has leaved the room
     const x = userid;
     let delete_socketid;
-    let screenstatus=false;
+    let screenstatus = false;
     for (let i = 0; i < roomuser.length; i++) {
       //data of that kicked user is removed from room useer
       if (roomuser[i].peerId === x) {
         delete_socketid = roomuser[i].sId;
-        
-        screenstatus =roomuser[i].screenshare;
+
+        screenstatus = roomuser[i].screenshare;
         roomuser.splice(i, 1);
       }
     }
@@ -163,8 +159,8 @@ io.on("connection", (socket) => {
       }
       io.in(roomId).emit("host-user", roomtohost[roomId], roomuser);
     }
-    if(screenstatus){
-      io.in(roomId).emit("screen-off",roomId);
+    if (screenstatus) {
+      io.in(roomId).emit("screen-off", roomId);
     }
     io.in(roomId).emit("user-leave", userid); //all user are told in room that userid has leaved the room and changes at client side are made accordingly
     io.in(roomId).emit("data-update", roomuser, delete_socketid); // emit to update the list of users at client side
@@ -173,13 +169,13 @@ io.on("connection", (socket) => {
   socket.on("back-button-leave", (sid) => {
     let uid;
     let myroom;
-    let screenstatus=false;
+    let screenstatus = false;
     for (let i = 0; i < roomuser.length; i++) {
       //data of the user left
       if (roomuser[i].sId === sid) {
         uid = roomuser[i].peerId;
         myroom = roomuser[i].room;
-        screenstatus=roomuser[i].screenshare
+        screenstatus = roomuser[i].screenshare;
         roomuser.splice(i, 1);
       }
     }
@@ -198,60 +194,52 @@ io.on("connection", (socket) => {
       io.in(myroom).emit("host-user", roomtohost[myroom], roomuser);
     }
 
-    if(screenstatus===true){
-      socket.broadcast.to(myroom).emit("screen-off",myroom);
+    if (screenstatus === true) {
+      socket.broadcast.to(myroom).emit("screen-off", myroom);
     }
     io.in(myroom).emit("user-leave", uid); //all user are told in room that userid has leaved the room and changes at client side are made accordingly
     io.in(myroom).emit("data-update", roomuser, sid);
   });
-  socket.on("screen-share", (roomId,myId) => {
+  socket.on("screen-share", (roomId, myId) => {
     let index;
-    const screenId=myId;
-    let allow= true;
-    
-    for(let i=0;i<roomuser.length;i++){
-      if(roomuser[i].screenshare&&roomId===roomuser[i].room){
-        allow=false;
+    const screenId = myId;
+    let allow = true;
+
+    for (let i = 0; i < roomuser.length; i++) {
+      if (roomuser[i].screenshare && roomId === roomuser[i].room) {
+        allow = false;
       }
-      if(roomuser[i].peerId===myId){
-        index=i;
+      if (roomuser[i].peerId === myId) {
+        index = i;
       }
     }
-    if(allow){
-      
-      roomuser[index].screenshare=true;
-      io.in(roomId).emit("share-screen",screenId);
+    if (allow) {
+      roomuser[index].screenshare = true;
+      io.in(roomId).emit("share-screen", screenId);
     }
-    io.in(roomId).emit("answer",allow,myId);
+    io.in(roomId).emit("answer", allow, myId);
   });
 
-  socket.on("stream-off", (roomId)=>{
-    socket.broadcast.to(roomId).emit("screen-off",roomId);
-    // peerIdToscreen.delete(myId);
-    for(let i=0;i<roomuser.length;i++){
-      if(roomuser[i].room===roomId){
-        roomuser[i].screenshare=false;
-      }
-    }
-  })
+  socket.on("stream-off", (roomId) => {
+    socket.broadcast.to(roomId).emit("screen-off", roomId);
 
-  socket.on("device-change",(peerid,roomId)=>{
-    console.log("grfdsc",peerid,roomId,roomuser);
-    for(let i=0;i<roomuser.length;i++){
-      if(roomuser[i].peerId===peerid){
-        roomuser[i].audio=true;
-        roomuser[i].video=true;
+    for (let i = 0; i < roomuser.length; i++) {
+      if (roomuser[i].room === roomId) {
+        roomuser[i].screenshare = false;
       }
     }
+  });
+
+  socket.on("device-change", (peerid, roomId) => {
     io.in(roomId).emit("data-update", roomuser);
-   io.in(roomId).emit("device-changed",peerid,roomId);
-  })
+    io.in(roomId).emit("device-changed", peerid, roomId);
+  });
   socket.on("disconnect", () => {
     // if the user in a room disconnects
-    // console.log("dissssssssssss");
+
     const curr_room = socketidtoRoomMap.get(socket.id); //get acess to the room from which it disconnected
     const userId = socketidToUserMap.get(socket.id); // get its userid from socketid
-    let screenstatus=false;
+    let screenstatus = false;
     let delete_socketid;
     if (roomtohost[curr_room] === socket.id) {
       // check if the user is host of any room if it is then make the second user who came into the room the new host of the room
@@ -271,16 +259,16 @@ io.on("connection", (socket) => {
     for (let i = 0; i < roomuser.length; i++) {
       if (roomuser[i].peerId === userId) {
         delete_socketid = roomuser[i].sId;
-        
-        screenstatus =roomuser[i].screenshare;
-        // console.log("frdvnsjcafsersd",screenstatus)
+
+        screenstatus = roomuser[i].screenshare;
+
         //remove the socketid from that dataso that the updated data can be displayed at the client side
 
         roomuser.splice(i, 1);
       }
     }
-    if(screenstatus===true){
-      socket.broadcast.to(curr_room).emit("screen-off",curr_room);
+    if (screenstatus === true) {
+      socket.broadcast.to(curr_room).emit("screen-off", curr_room);
     }
     socket.broadcast.to(curr_room).emit("user-leave", userId); // on tab closing
     io.in(curr_room).emit("host-user", roomtohost[curr_room], roomuser); // tell everyone in the room that there is a new host if the leaving user is a host of that room

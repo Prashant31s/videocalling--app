@@ -2,20 +2,25 @@ import React, { useEffect, useState, useRef } from "react";
 import cx from "classnames";
 import { Mic, MicOff } from "lucide-react";
 import AudioVisualizer from "./AudioVisualiser";
-
 import styles from "./index.module.css";
-import { ReactMediaRecorder } from "react-media-recorder";
-import ReactPlayer from "react-player";
 
 const Player = (props) => {
-  const { playerId ,url, muted, playing, isActive, name, ishost,mictoggleuser} = props;
+  const {
+    playerId,
+    url,
+    muted,
+    playing,
+    isActive,
+    name,
+    ishost,
+    mictoggleuser,
+  } = props;
   const videoRef = useRef(null);
-  const audioRef =useRef(null);
-  
+
   const [videoTrack, setVideoTrack] = useState(null);
   const [audioTrack, setAudioTrack] = useState(null);
-  if(ishost){
-    console.log("i am host",playerId);
+  if (ishost) {
+    console.log("i am host", playerId);
   }
   useEffect(() => {
     if (videoRef.current) {
@@ -26,26 +31,22 @@ const Player = (props) => {
       if (videoTracks.length > 0) {
         setVideoTrack(videoTracks[0]);
       }
-      
+
       if (audioTracks.length > 0) {
         setAudioTrack(audioTracks[0]);
       }
     }
-    
-   
-  }, [url,playing,muted]);
+  }, [url, playing, muted]);
 
   useEffect(() => {
     if (videoTrack) {
       if (playing) {
-        videoTrack.enabled = true;  // Enable video when playing
+        videoTrack.enabled = true; // Enable video when playing
       } else {
         videoTrack.enabled = false; // Disable video when not playing
       }
     }
   }, [playing, videoTrack]);
-
-  
 
   return (
     <div
@@ -57,37 +58,28 @@ const Player = (props) => {
     >
       {playing ? (
         <>
-          {/* {url instanceof MediaStream ? ( */}
-          {
-               isActive ?(
-                <video
-                  ref={videoRef}
-                  muted={true}
-                  autoPlay
-                  playsInline
-                  width="100%"
-                  height="100%"
-                  
-                  controls={false}
-                />
-    
-              ):(
-                <video
-                  ref={videoRef}
-                  muted={muted}
-                  autoPlay
-                  playsInline
-                  width="100%"
-                  height="100%"
-                  
-                  controls={false}
-                />
-    
-              )
-          }
-       
-           
-          
+          {isActive ? (
+            <video
+              ref={videoRef}
+              muted={true}
+              autoPlay
+              playsInline
+              width="100%"
+              height="100%"
+              controls={false}
+            />
+          ) : (
+            <video
+              ref={videoRef}
+              muted={muted}
+              autoPlay
+              playsInline
+              width="100%"
+              height="100%"
+              controls={false}
+            />
+          )}
+
           <p className={styles.username}>{name}</p>
         </>
       ) : (
@@ -95,43 +87,36 @@ const Player = (props) => {
           {!muted && !isActive && <AudioVisualizer stream={url} />}
           <p className={styles.notplayingusername}>{name.charAt(0)}</p>
           <div className="-z-50">
-               <video
-                  ref={videoRef}
-                  muted={muted}
-                  autoPlay
-                  playsInline
-                  width="0%"
-                  height="0%"
-                  style={{ display: !playing ? 'none' : 'block' }}
-                  controls={false}
-                />
+            <video
+              ref={videoRef}
+              muted={muted}
+              autoPlay
+              playsInline
+              width="0%"
+              height="0%"
+              style={{ display: !playing ? "none" : "block" }}
+              controls={false}
+            />
           </div>
-       
-          
         </>
       )}
 
       {!isActive ? (
-        
-          ishost ? (
-            muted ? (
-              <MicOff className={styles.icon2} size={20}  />
-            ) : (
-              <Mic className={styles.icon2} size={20} onClick={() => mictoggleuser(playerId)} />
-            )
-        
-
-          ):(
-            muted ? (
-              <MicOff className={styles.icon2} size={20} />
-            ) : (
-              <Mic className={styles.icon2} size={20} />
-            )
-
+        ishost ? (
+          muted ? (
+            <MicOff className={styles.icon2} size={20} />
+          ) : (
+            <Mic
+              className={styles.icon2}
+              size={20}
+              onClick={() => mictoggleuser(playerId)}
+            />
           )
-        
-        
-        
+        ) : muted ? (
+          <MicOff className={styles.icon2} size={20} />
+        ) : (
+          <Mic className={styles.icon2} size={20} />
+        )
       ) : undefined}
     </div>
   );
