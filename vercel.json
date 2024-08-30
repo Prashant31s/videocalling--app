@@ -1,7 +1,7 @@
 {
   "version": 2,
   "builds": [
-    { "src": "client/next.config.mjs", "use": "@vercel/next" },
+    { "src": "client/next.config.js", "use": "@vercel/next" },
     { "src": "server/app.js", "use": "@vercel/node" }
   ],
   "routes": [
