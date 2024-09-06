@@ -751,7 +751,7 @@ function Chatroom() {
                 <div className="flex flex-col gap-2 mr-[5px]">
                   {mesuser.map((msg, index) =>
                     msg.ruser == user ? (
-                      <div className="bg-primary flex flex-col self-end max-w-60 pb-1 border-[1px] border-black rounded-[30px] bg-zinc-700">
+                      <div key ={index} className="bg-primary flex flex-col self-end max-w-60 pb-1 border-[1px] border-black rounded-[30px] bg-zinc-700">
                         <p className="text-wrap m-1 p-1  word text-white ">
                           {msg.nmessages}
                         </p>
