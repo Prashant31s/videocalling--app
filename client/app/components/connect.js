@@ -1,3 +1,3 @@
 import { io } from 'socket.io-client';
-const socket =io.connect("http://192.168.1.195:8080")
+const socket =io.connect("https://videocalling-app.onrender.com/")
 export default socket
