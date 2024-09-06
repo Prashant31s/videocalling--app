@@ -1,5 +1,5 @@
 "use client";
-import React, { useEffect, useState, useRef } from "react";
+import React, { useEffect, useState, useRef,Suspense } from "react";
 import socket from "../components/connect";
 import { useSearchParams } from "next/navigation";
 import usePeer from "../hooks/usePeer";
@@ -71,6 +71,8 @@ function Chatroom() {
   const [isChecked, setIsChecked] = useState(false);
   let ishost = false;
 
+
+  
   useEffect(() => {
     if (stream && players[myId]) {
       stream.getAudioTracks()[0].enabled = !players[myId].muted;
@@ -391,7 +393,7 @@ function Chatroom() {
 
     setMessage("");
   };
-  let xstream = null;
+  // xstream = null;
 
   const shareScreen = async () => {
     if (screenStream) {
@@ -409,9 +411,10 @@ function Chatroom() {
       try {
         const screenStreame = await navigator.mediaDevices.getDisplayMedia({
           video: true,
+         
         });
         setScreenStream(screenStreame);
-        xstream = screenStreame;
+        //xstream = screenStreame;
         setShowScreen(true);
         setScrShare(true);
       } catch (error) {
@@ -490,8 +493,7 @@ function Chatroom() {
           source.connect(dest); // Connect the new stream to the existing destination
         } catch (error) {
           console.error(
-            `Failed to create MediaStreamSource for player ${playerId}:`,
-            error
+            `Failed to create MediaStreamSource for player ${playerId}:`,error
           );
         }
       } else {
@@ -751,7 +753,7 @@ function Chatroom() {
                 <div className="flex flex-col gap-2 mr-[5px]">
                   {mesuser.map((msg, index) =>
                     msg.ruser == user ? (
-                      <div key ={index} className="bg-primary flex flex-col self-end max-w-60 pb-1 border-[1px] border-black rounded-[30px] bg-zinc-700">
+                      <div key = {index} className="bg-primary flex flex-col self-end max-w-60 pb-1 border-[1px] border-black rounded-[30px] bg-zinc-700">
                         <p className="text-wrap m-1 p-1  word text-white ">
                           {msg.nmessages}
                         </p>
@@ -830,4 +832,14 @@ function Chatroom() {
   );
 }
 
-export default Chatroom;
+// export default Chatroom;
+const LoadingFallback = () => <div>Loading chat...</div>;
+
+// Wrapping Home component with Suspense in HomePage
+export default function ChatPage() {
+  return (
+    <Suspense fallback={<LoadingFallback />}>
+      <Chatroom/>
+    </Suspense>
+  );
+}
