@@ -2,7 +2,7 @@ import express from "express";
 import { Server } from "socket.io";
 import { createServer } from "http";
 const app = express();
-const port = 8080;
+const port = process.env.PORT || 8000;
 const server = createServer(app);
 
 const roomuser = [];
