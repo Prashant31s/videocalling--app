@@ -36,12 +36,13 @@ const usePlayer = (myId, roomId, peer) => {
     console.log("I toggled my video");
     setPlayers((prev) => {
       const copy = cloneDeep(prev);
-      console.log("before", copy[myId].playing);
-      copy[myId].playing = !copy[myId].playing;
+      if(copy[myId]){
+        copy[myId].playing = !copy[myId].playing;
+      }
+      
 
       return { ...copy };
     });
-    console.log("playergrger", playerHighlighted);
     socket.emit("user-toggle-video", myId, roomId);
   };
 
