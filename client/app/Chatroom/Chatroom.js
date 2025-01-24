@@ -171,7 +171,9 @@ function Chatroom() {
       //function to handle if someone has changed its vedio status in the room
       setPlayers((prev) => {
         const copy = cloneDeep(prev);
+        if(copy[userId]){
         copy[userId].playing = !copy[userId].playing; // changing the video status of that user so that it can be reflected on the screen
+        }
         return { ...copy };
       });
     };
