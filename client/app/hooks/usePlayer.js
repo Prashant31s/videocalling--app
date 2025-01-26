@@ -20,19 +20,19 @@ const usePlayer = (myId, roomId, peer) => {
     router.push(`/`);
   };
 
-const toggleVideoo = () => {
-    console.log("I toggled my video");
+const toggleAudio = () => {
+    console.log("I toggled my audio");
     setPlayers((prev) => {
       const copy = cloneDeep(prev);
-      if(!copy[myId]){return;}
-      if(copy[myId]){
-        copy[myId].playing = !copy[myId].playing;
+      if(!copy[myId]){
+        return;
       }
-      
-
+      copy[myId].url.getAudioTracks()[0].enabled = copy[myId].muted;
+      copy[myId].muted = !copy[myId].muted;
       return { ...copy };
     });
-    socket.emit("user-toggle-video", myId, roomId);
+    
+    socket.emit("user-toggle-audio", myId, roomId);
   };
 
 
