@@ -159,7 +159,11 @@ function Chatroom() {
 
       setData(roomuser);
       setPlayers((prev) => {
+        
         const copy = cloneDeep(prev);
+        if(!copy[userId]){
+            return;
+        }
         copy[userId].url.getAudioTracks()[0].enabled = copy[userId].muted;
         copy[userId].muted = !copy[userId].muted;
 
