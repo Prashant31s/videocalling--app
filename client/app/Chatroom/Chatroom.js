@@ -660,7 +660,11 @@ function Chatroom() {
       </div>
       <div className={styles.main}>
         <div className={styles.toppart}>
+            {
+              !playerHighlighted&&<div className="justify-center w-28" style={{width:"100%" , marginLeft:"30%", fontSize:"20px"}}>reload page if your face is not visible</div>
+            }
           <div className={playerContainerClass}>
+            
             {screenStream && (
               <ReactPlayer
                 url={screenStream}
