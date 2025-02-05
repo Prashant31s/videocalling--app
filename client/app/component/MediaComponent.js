@@ -19,6 +19,13 @@ const MediaComponent = (props) => {
   const toggleVideo = props.toggleVideo;
   const muted = props.muted;
 
+  const toggleVoice = () => {
+    if(playing!=undefined){
+      toggleAudio();
+    }
+    
+  }
+
   const fetchDevices = async () => {
     try {
       const devices = await navigator.mediaDevices.enumerateDevices();
@@ -132,7 +139,7 @@ const MediaComponent = (props) => {
           className={`rounded-full w-[55px] h-14  flex items-center justify-center ${
             muted ? "bg-buttonPrimary" : "bg-secondary"
           } p-[12px] hover:bg-buttonPrimary text-white`}
-          onClick={toggleAudio}
+          onClick={toggleVoice}
         >
           <img
             src={`https://www.svgrepo.com/show/${
