@@ -78,6 +78,7 @@ const MediaComponent = (props) => {
       navigator.mediaDevices.ondevicechange = null;
     };
   }, []);
+  
   useEffect(() => {
     // Cleaningup previous media stream when new one is set
     return () => {
@@ -132,11 +133,11 @@ const MediaComponent = (props) => {
   }, [mediaStream]);
 
   return (
-    <div className="flex flex-row gap-3">
-      <div className="flex flex-row rounded-full bg-white items-center">
+    <div className={styles.menuContainer}>
+      <div className={styles.mediaContainer}>
         <button
           title={muted ? "Turn on mic" : "Turn off mic"}
-          className={`rounded-full w-[55px] h-14  flex items-center justify-center ${
+          className={` ${styles.menuButton} rounded-full w-[55px] h-14  flex items-center justify-center ${
             muted ? "bg-buttonPrimary" : "bg-secondary"
           } p-[12px] hover:bg-buttonPrimary text-white`}
           onClick={toggleVoice}
@@ -151,12 +152,12 @@ const MediaComponent = (props) => {
         </button>
 
         <Menu as="div" className="relative">
-          <MenuButton className="inline-flex items-center gap-x-1.5 rounded-r-full bg-white px-[2px] py-2 text-sm font-semibold text-gray-900 shadow-sm   hover:bg-gray-50">
-            <ChevronDownIcon className="h-10 w-8 text-gray-600" />
+          <MenuButton className={styles.menuDropdownButton}>
+            <ChevronDownIcon className={styles.chevronIcon + " text-gray-600"} />
           </MenuButton>
           <MenuItems
             as="div"
-            className="absolute bottom-full right-0  w-56 origin-bottom-right rounded-md bg-white shadow-lg  focus:outline-none z-10"
+            className="absolute bottom-full left-0  w-56 origin-bottom-right rounded-md bg-white shadow-lg  focus:outline-none z-10"
           >
             <div className="">
               {audioDevices.map((device) => (
@@ -180,9 +181,9 @@ const MediaComponent = (props) => {
         </Menu>
       </div>
 
-      <div className="flex flex-row rounded-full bg-white items-center">
+      <div className={styles.mediaContainer}>
         <button
-          className={`rounded-full w-[55px] h-14  flex items-center justify-center ${
+          className={`${styles.menuButton} rounded-full w-[55px] h-14  flex items-center justify-center ${
             playing ? "bg-secondary" : "bg-buttonPrimary"
           } p-[12px] hover:bg-secondary text-white`}
           title={playing ? "Turn Off Video" : "Turn On Video"}
@@ -198,12 +199,12 @@ const MediaComponent = (props) => {
         </button>
 
         <Menu as="div" className="relative">
-          <MenuButton className="inline-flex items-center gap-x-1.5 rounded-r-full bg-white px-[2px] py-2 text-sm font-semibold text-gray-900 shadow-sm  hover:bg-gray-50">
-            <ChevronDownIcon className="h-10 w-8 text-gray-600" />
+          <MenuButton className={styles.menuDropdownButton}>
+            <ChevronDownIcon className={styles.chevronIcon + " text-gray-600"} />
           </MenuButton>
           <MenuItems
             as="div"
-            className="absolute bottom-full right-0 mt-1 w-56 origin-bottom-right rounded-md bg-white shadow-lg  focus:outline-none z-10"
+            className="absolute bottom-full left-0 mt-1 w-56 origin-bottom-right rounded-md bg-white shadow-lg  focus:outline-none z-10"
           >
             <div className="">
               {videoDevices.map((device) => (

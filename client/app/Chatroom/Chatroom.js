@@ -614,11 +614,6 @@ function Chatroom() {
 
   return (
     <>
-      <img
-        src={`https://upload.wikimedia.org/wikipedia/commons/a/a7/Skype_logo.svg`}
-        alt="button icon"
-        className="absolute left-[70px] top-[2px] w-[65px]"
-      />
       <div className="absolute top-[3px] right-[10px] ">
         {mediaBlobUrl && (
           <button class=" hover:bg-gray-400 text-gray-800 font-bold  rounded inline-flex items-center pr-[100px]">

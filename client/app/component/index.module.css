@@ -1,55 +1,61 @@
 .bottomMenu {
-  @apply  justify-between   mx-auto;
+  @apply justify-between   mx-auto;
   align-items: center;
-  position:relative;
+  position: relative;
   justify-content: center;
   gap: 15px;
   display: flex;
-  height:100%;
+  height: 100%;
   right: 0;
   left: 0;
-  
-  /* .micbutton {
-    width: 55px;
-    background-color: red;
-    hover
-  } */
+
   .icon {
-    @apply rounded-full text-white ;
+    @apply rounded-full text-white;
     padding: 10px;
     cursor: pointer;
-    background-color: theme("colors.secondary");
+    background-color: theme('colors.secondary');
 
     &:hover,
     &.active {
-      background-color: theme("colors.buttonPrimary");
+      background-color: theme('colors.buttonPrimary');
     }
   }
-  .whitesvg{
+  .whitesvg {
     filter: invert(1) brightness(100%);
+  }
+  .menuButton {
+    width: 55px;
+    height: 55px;
+    padding: 12px;
+  }
+  @media (max-width: 600px) {
+    .whitesvg {
+      width: 22px;
+      height: 22px;
+    }
+    .menuButton {
+      width: 36px !important;
+      height: 36px !important;
+      padding: 6px !important;
+    }
   }
 }
 
 /* bottom css ends */
 
-
-
 /* copysection css starts */
 .copyContainer {
-  @apply  text-black   ;
+  @apply text-black;
   display: flex;
   flex-direction: column;
   position: absolute;
   border-color: black;
   align-items: center;
-  /* border-width: 1px; */
   justify-content: center;
-  
   padding-top: 15px;
   margin-left: 20px;
-  margin-top:0px;
+  margin-top: 0px;
   /* border-radius: 15px; */
-  
 
   .copyHeading {
     color: black;
@@ -60,29 +66,35 @@
     margin: 10px;
   }
 }
+
+@media (max-width: 800px) {
+  .copyContainer {
+    padding-top: 1px;
+    margin-left: 10px;
+    flex-direction: row;
+  }
+}
+
 /* copy section css ends */
 
 /* player  css start */
 .playerContainer {
-  @apply  overflow-hidden   ;
+  @apply overflow-hidden;
 
   object-fit: cover;
   width: 100%;
-  height:100%;
-  background-color:  #dbd7d2;
+  height: 100%;
+  background-color: #dbd7d2;
   border: 1px solid black;
   position: relative;
 }
-
 
 .active {
   @apply rounded-xl;
 }
 
 .notActive {
-  @apply rounded-xl ;
-  
-
+  @apply rounded-xl;
 }
 
 .icon2 {
@@ -90,36 +102,108 @@
 }
 
 .user {
-  @apply text-white ;
-  
+  @apply text-white;
 }
-.name{
-  @apply text-white absolute left-2 bottom-2
+.name {
+  @apply text-white absolute left-2 bottom-2;
 }
 .notPlaying {
   @apply flex items-center justify-center;
   /* object-fit: contain; */
-  background-color:	rgb(103, 101, 101) ;
+  background-color: rgb(103, 101, 101);
   border: 1px solid black;
-
-  
 }
-.username{
- color: white;
- position: absolute;
- left: 5px;
- bottom: 5px;
- padding: 5px 10px;
- background-color:	rgb(64,64,64) ;
- border-radius: 8px;
+.username {
+  color: white;
+  position: absolute;
+  left: 5px;
+  bottom: 5px;
+  padding: 5px 10px;
+  background-color: rgb(64, 64, 64);
+  border-radius: 8px;
 }
-.notplayingusername{
- color: white;
- position: absolute;
- font-size:70px;
- justify-content: center;
- 
- border-radius: 100%;
+.notplayingusername {
+  color: white;
+  position: absolute;
+  font-size: 70px;
+  justify-content: center;
 
+  border-radius: 100%;
 }
 /* player css ends */
+
+/* media compoent css starts*/
+.menuContainer {
+  display: flex;
+  flex-direction: row;
+  gap: 15px;
+}
+.mediaContainer {
+  @apply flex flex-row rounded-full bg-white items-center;
+  gap: 8px;
+}
+@media (max-width: 600px) {
+  .bottomMenu {
+    gap: 15px;
+    padding: 4px 0;
+  }
+  .mediaContainer {
+    gap: 4px;
+    padding: 0px;
+    border-radius: 18px;
+    height: 36px;
+  }
+}
+
+@media (max-width: 538px) {
+  .bottomMenu {
+    align-items: self-end;
+    bottom: 5px;
+  }
+}
+
+@media (max-width: 396px) {
+  .bottomMenu {
+    gap: 10px;
+  }
+  .menuContainer {
+    gap: 10px;
+  }
+}
+@media (max-width: 396px) {
+  .bottomMenu {
+    gap: 5px;
+  }
+  .menuContainer {
+    gap: 5px;
+  }
+}
+
+.chevronIcon {
+  width: 32px;
+  height: 32px;
+}
+
+.menuDropdownButton {
+  padding: 4px 8px;
+  border-radius: 9999px;
+  background: #fff;
+  font-size: 1rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+@media (max-width: 600px) {
+  .chevronIcon {
+    width: 20px;
+    height: 20px;
+  }
+  .menuDropdownButton {
+    padding: 1px 2px;
+    font-size: 0.85rem;
+    gap: 3px;
+  }
+}
+
+/* media component css ends */
