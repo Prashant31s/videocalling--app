@@ -85,7 +85,7 @@ const Player = (props) => {
       ) : (
         <>
           {!muted && !isActive && <AudioVisualizer stream={url} />}
-          <p className={styles.notplayingusername}>{name.charAt(0)}</p>
+          <p className={styles.notplayingusername}>{name?.charAt(0)}</p>
           <div className="-z-50">
             <video
               ref={videoRef}

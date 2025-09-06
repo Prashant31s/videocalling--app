@@ -616,11 +616,11 @@ function Chatroom() {
     <>
       <div className="absolute top-[3px] right-[10px] ">
         {mediaBlobUrl && (
-          <button class=" hover:bg-gray-400 text-gray-800 font-bold  rounded inline-flex items-center pr-[100px]">
+          <button class="  text-gray-800 font-bold  rounded inline-flex items-center mr-[10px]">
             <span>
               <a href={mediaBlobUrl} download="ScreenRecording">
                 <svg
-                  class="fill-current w-4 h-4 mr-2"
+                  class="fill-current w-4 h-4 text-[var(--fourth)] hover:bg-[var(--secondary)]"
                   xmlns="http://www.w3.org/2000/svg"
                   viewBox="0 0 20 20"
                 >
@@ -641,7 +641,7 @@ function Chatroom() {
           />
           <span
             className={`slider mr-3 flex h-[26px] w-[50px] items-center rounded-full p-1 duration-200 ${
-              isChecked ? "bg-red-500" : "bg-[#CCCCCE]"
+              isChecked ? "bg-red-500" : "bg-[var(--secondary)]"
             }`}
           >
             <span

@@ -3,11 +3,25 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+:root {
+  --primary-gradient-start: #64748b;
+  --primary-gradient-end: #10b981;
+  --box-gradient-start: #f3f4f6;
+  --box-gradient-end: #a7f3d0;
+  --primary: #439A97;
+  --secondary: #62B6B7;
+  --third: #97DECE;
+  --fourth: #CBEDD5;
+  --fifth: #0EA293;
+  /* Add more as needed */
+}
 .main{
   display: flex;
   flex-direction: column;
   justify-content: center;
   align-items: center;
+  background: linear-gradient(135deg, #64748b 0%, #10b981 100%);
   height: 100vh;
 
 }
@@ -18,11 +32,11 @@
   justify-content: center;
   margin: auto;
   border: 2px;
-  background-color: gray;
+  background: #f0f0f0;
   border-radius: 15px;
+  height: 280px;
+  width: 300px;
 }
-
-
 
 
 .body {

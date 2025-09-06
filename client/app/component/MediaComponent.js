@@ -33,7 +33,7 @@ const MediaComponent = (props) => {
       const video = devices.filter((device) => device.kind === "videoinput");
       const audio = devices.filter(
         (device) =>
-          device.kind === "audioinput" && device.label.charAt(0) == "M"
+          device.kind === "audioinput" && device.label?.charAt(0) == "M"
       );
       setVideoDevices(video);
       setAudioDevices(audio);
