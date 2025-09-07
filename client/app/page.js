@@ -47,7 +47,7 @@ export default function Home() {
   return (
     <>
       <div className="main">
-        {isMobileDeviceError && <h2 className="error">Some features won't work in mobile device</h2>}
+        {isMobileDeviceError && <h2 className="error">Some features are not supported in mobile device</h2>}
 
         {!hasPermission && <span className="error">Give media permission to proceed</span>}
         <div className="box">
