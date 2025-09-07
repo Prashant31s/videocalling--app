@@ -1,5 +1,3 @@
-
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -16,28 +14,33 @@
   --fifth: #0EA293;
   /* Add more as needed */
 }
-.main{
+.main {
   display: flex;
   flex-direction: column;
   justify-content: center;
   align-items: center;
   background: linear-gradient(135deg, #64748b 0%, #10b981 100%);
   height: 100vh;
+}
+
+.error{
+  position: relative;
+  margin: 5px;
+  color: #161b23;
 
 }
-.box{
+.box {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  margin: auto;
+  /* margin:   */
   border: 2px;
   background: #f0f0f0;
   border-radius: 15px;
   height: 280px;
   width: 300px;
 }
-
 
 .body {
   background-color: #000000;
@@ -55,7 +58,7 @@
 .message {
   max-height: 50px; /* Set a fixed maximum height */
   overflow-y: auto;
- 
+
   margin-left: 3px;
 }
 
@@ -75,30 +78,24 @@
 
 /* Message input form */
 
-
-
-
 /* Send message button */
 .form button {
   padding: 10px 10px 10px 10px;
   margin-left: 5px;
   margin-bottom: 6px;
-  margin-top: 8px; 
-  margin-right:10px;
+  margin-top: 8px;
+  margin-right: 10px;
   box-sizing: border-box;
   font-size: 1rem;
-  
 
   border: 2px solid;
   border-radius: 25px;
-  background-color:#db2777 ;
-  
+  background-color: #db2777;
+
   color: #000;
   cursor: pointer;
   transition: background-color 0.2s ease;
 }
-
-
 
 .form button:hover {
   background-color: #9d174d;
@@ -108,11 +105,4 @@
   word-wrap: break-word;
 }
 
-
-
-
-
-
-
 /* Message input form */
-

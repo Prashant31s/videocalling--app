@@ -25,7 +25,7 @@
   margin-top: 0px;
   border-radius: 15px;
 }
-
+/* players css starts here */
 .PlayerContainer {
   display: grid;
   align-items: center;
@@ -303,6 +303,8 @@
   }
 }
 
+/* players css ends here */
+
 .datalist {
   width: 25%;
   height: 100%;
@@ -312,6 +314,8 @@
   border: 1px solid black;
 }
 
+
+/* chat css start here */
 .chatcontainer {
   display: flex;
   flex-direction: column;
@@ -329,7 +333,6 @@
 .chatArea {
   display: flex;
   flex-direction: column-reverse;
-
   margin-top: 3;
   margin-right: 2px;
   margin-bottom: 10px;
@@ -363,3 +366,45 @@
   border: 2px solid;
   border-radius: 25px;
 }
+
+@media (max-width: 800px) {
+  .form {
+    flex-direction: column;
+    align-items: center;
+    gap: 5px;
+  }
+  .form button {
+    width: 50%;
+    height: 40px;
+    border-radius: 15px;
+  }
+  .input{
+    /* width: 50% */
+    border-radius: 15px;
+  }
+}
+
+
+@media (max-width: 500px) {
+  .form {
+    flex-direction: column;
+    align-items: center;
+    gap: 5px;
+  }
+  .form button {
+    width: 70px;
+    height: 40px;
+    margin: 0px;
+  }
+  .input{
+    width: 80px
+  }
+}
+
+@media (max-width: 400px) {
+  .form button {
+    width: 55px;
+  }
+}
+
+/* chat css ends here */
