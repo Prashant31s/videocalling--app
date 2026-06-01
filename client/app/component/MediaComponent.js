@@ -146,7 +146,7 @@ const MediaComponent = (props) => {
             <div className={styles.mediaContainer}>
                 <button
                     title={muted ? "Turn on mic" : "Turn off mic"}
-                    className={` ${styles.menuButton} rounded-full w-[55px] h-14  flex items-center justify-center ${muted ? "bg-buttonPrimary" : "bg-secondary"} p-[12px] hover:bg-buttonPrimary text-white`}
+                    className={` ${styles.menuButton} rounded-full w-[55px] h-14 flex items-center justify-center ${muted ? "bg-red-600" : "bg-slate-700"} p-[12px] hover:bg-teal-600 text-white`}
                     onClick={toggleVoice}
                 >
                     <img
@@ -197,7 +197,7 @@ const MediaComponent = (props) => {
 
             <div className={styles.mediaContainer}>
                 <button
-                    className={`${styles.menuButton} rounded-full w-[55px] h-14  flex items-center justify-center ${  playing ? "bg-secondary" : "bg-buttonPrimary"} p-[12px] hover:bg-secondary text-white`}
+                    className={`${styles.menuButton} rounded-full w-[55px] h-14 flex items-center justify-center ${playing ? "bg-slate-700" : "bg-red-600"} p-[12px] hover:bg-teal-600 text-white`}
                     title={playing ? "Turn Off Video" : "Turn On Video"}
                     onClick={toggleVideo}
                 >

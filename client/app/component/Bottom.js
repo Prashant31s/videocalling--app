@@ -1,5 +1,6 @@
 import styles from "./index.module.css";
 import MediaComponent from "./MediaComponent";
+import { ScreenShare, ScreenShareOff } from "lucide-react";
 
 const Bottom = (props) => {
     const {
@@ -36,7 +37,7 @@ const Bottom = (props) => {
             />
 
             <button
-                className={`${styles.menuButton} rounded-full w-[55px] bg-secondary items-center  p-3 fill-white hover:bg-buttonPrimary`}
+                className={`${styles.menuButton} rounded-full w-[55px] bg-red-600 items-center p-3 fill-white hover:bg-red-500`}
                 title="End Call"
                 onClick={leaveRoom}
             >
@@ -50,7 +51,7 @@ const Bottom = (props) => {
             {showDataList ? (
                 <button
                     title="Close Participants"
-                    className={`${styles.menuButton} rounded-full w-[55px] bg-black hover:bg-secondary items-center  p-[8px] text-white`}
+                    className={`${styles.menuButton} rounded-full w-[55px] bg-teal-600 hover:bg-teal-500 items-center p-[8px] text-white`}
                     onClick={toggleDataList}
                 >
                     <img
@@ -62,7 +63,7 @@ const Bottom = (props) => {
             ) : (
                 <button
                     title="Open Participants"
-                    className={`${styles.menuButton} rounded-full w-[55px] bg-secondary hover:bg-black items-center  p-3 text-white`}
+                    className={`${styles.menuButton} rounded-full w-[55px] bg-slate-700 hover:bg-teal-600 items-center p-3 text-white`}
                     onClick={toggleDataList}
                 >
                     <img
@@ -76,7 +77,7 @@ const Bottom = (props) => {
             {showChat ? (
                 <button
                     title="Close Chat"
-                    className={`${styles.menuButton} rounded-full w-[55px] bg-black hover:bg-secondary items-center  p-3 text-white`}
+                    className={`${styles.menuButton} rounded-full w-[55px] bg-teal-600 hover:bg-teal-500 items-center p-3 text-white`}
                     onClick={toggleChat}
                 >
                     <img
@@ -88,7 +89,7 @@ const Bottom = (props) => {
             ) : (
                 <button
                     title="Open Chat"
-                    className={`${styles.menuButton} rounded-full w-[55px] bg-secondary  hover:bg-black items-center  p-3 fill-white`}
+                    className={`${styles.menuButton} rounded-full w-[55px] bg-slate-700 hover:bg-teal-600 items-center p-3 fill-white`}
                     onClick={toggleChat}
                 >
                     <img
@@ -102,26 +103,18 @@ const Bottom = (props) => {
             {!showScreen ? (
                 <button
                     title="Start Screen Share"
-                    className={`${styles.menuButton} rounded-full w-[55px] bg-secondary items-center  p-3 fill-white hover:bg-black`}
+                    className={`${styles.menuButton} rounded-full w-[55px] bg-slate-700 flex items-center justify-center p-3 text-white hover:bg-teal-600`}
                     onClick={shareScreen}
                 >
-                    <img
-                        src={`https://static.thenounproject.com/png/4038430-200.png`}
-                        alt="button icon"
-                        className={styles.whitesvg}
-                    />
+                    <ScreenShare size={24} strokeWidth={2.3} />
                 </button>
             ) : (
                 <button
                     title="Close Screen Share"
-                    className={`${styles.menuButton} rounded-full w-[55px] bg-black items-center  p-3 fill-white hover:bg-secondary`}
+                    className={`${styles.menuButton} rounded-full w-[55px] bg-teal-600 flex items-center justify-center p-3 text-white hover:bg-teal-500`}
                     onClick={shareScreen}
                 >
-                    <img
-                        src={`https://www.svgrepo.com/show/310201/video-person-off.svg`}
-                        alt="button icon"
-                        className={styles.whitesvg}
-                    />
+                    <ScreenShareOff size={24} strokeWidth={2.3} />
                 </button>
             )}
         </div>

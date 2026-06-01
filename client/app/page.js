@@ -1,84 +1,172 @@
-'use client';
-import React, { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
+"use client";
+import React, { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import {
+    AlertCircle,
+    ArrowRight,
+    MessageCircle,
+    MonitorUp,
+    Radio,
+    ShieldCheck,
+    UserRound,
+    Video,
+} from "lucide-react";
 
 export default function Home() {
-  const [roomName, setRoomName] = useState('');
-  const [userName, setUsername] = useState('');
-  const [takenName, setTakenName] = useState(true);
-  const [hasPermission, setHasPermission] = useState(null); // <-- Add this
-  const [isMobileDeviceError, setIsMobileDeviceError] = useState(false);
+    const [roomName, setRoomName] = useState("");
+    const [userName, setUsername] = useState("");
+    const [hasPermission, setHasPermission] = useState(null); // <-- Add this
+    const [isMobileDeviceError, setIsMobileDeviceError] = useState(false);
 
-  const router = useRouter();
+    const router = useRouter();
 
-  function userjoin() {
-    if (userName && roomName) {
-      router.push(`/Chatroom?user=${userName}&room=${roomName}`);
+    function userjoin() {
+        if (userName && roomName) {
+            router.push(`/Chatroom?user=${userName}&room=${roomName}`);
+        }
     }
-  }
 
-  async function checkMediaPermissions() {
-    try {
-      await navigator.mediaDevices.getUserMedia({ audio: true, video: true });
-      return true;
-    } catch (err) {
-      return false;
+    async function checkMediaPermissions() {
+        try {
+            await navigator.mediaDevices.getUserMedia({
+                audio: true,
+                video: true,
+            });
+            return true;
+        } catch (err) {
+            return false;
+        }
     }
-  }
-  function isMobileDevice() {
-    return /Mobi|Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-  }
-
-  useEffect(() => {
-    async function getPermission() {
-      const isPermission = await checkMediaPermissions();
-      setHasPermission(isPermission); // <-- Store in state
-      console.log('is permission', isPermission);
+    function isMobileDevice() {
+        return /Mobi|Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
+            navigator.userAgent,
+        );
     }
-    getPermission();
 
-    if (isMobileDevice()) {
-      setIsMobileDeviceError(true);
-    } else {
-      setIsMobileDeviceError(false);
-    }
-  }, []);
+    useEffect(() => {
+        async function getPermission() {
+            const isPermission = await checkMediaPermissions();
+            setHasPermission(isPermission); // <-- Store in state
+            console.log("is permission", isPermission);
+        }
+        getPermission();
 
-  return (
-    <>
-      <div className="main">
-        {isMobileDeviceError && <h2 className="error">Some features are not supported in mobile device</h2>}
+        if (isMobileDevice()) {
+            setIsMobileDeviceError(true);
+        } else {
+            setIsMobileDeviceError(false);
+        }
+    }, []);
 
-        {!hasPermission && <span className="error">Give media permission to proceed</span>}
-        <div className="box">
-          <input
-            className="flex p-2 mb-4 rounded-xl"
-            style={{ border: '1px solid black' }}
-            placeholder="Username"
-            value={userName}
-            maxLength={8}
-            onChange={(e) => setUsername(e.target.value)}
-          />
-          <input
-            className="p-2 m shadow-md rounded-xl "
-            style={{ border: '1px solid black' }}
-            placeholder="Room"
-            value={roomName}
-            maxLength={5}
-            onChange={(e) => setRoomName(e.target.value)}
-          />
+    return (
+        <main className="loginPage">
+            <section className="loginShell">
+                <div className="loginIntro">
+                    <div className="brandMark">
+                        <Video size={24} />
+                    </div>
+                    <p className="eyebrow">Secure video rooms</p>
+                    <h1>Join a call without the clutter.</h1>
+                    <p className="introCopy">
+                        Enter your name and room code to continue into a focused
+                        video room.
+                    </p>
 
-          {!takenName ? '' : <span className="p-2 text-wrap text-[#555]">{takenName}</span>}
+                    <div className="featureGrid">
+                        <div>
+                            <MessageCircle size={18} />
+                            <span>Room chat</span>
+                        </div>
+                        <div>
+                            <MonitorUp size={18} />
+                            <span>Screen share</span>
+                        </div>
+                        <div>
+                            <Radio size={18} />
+                            <span>Recording</span>
+                        </div>
+                    </div>
+                </div>
 
-          <button
-            className="p-4 m-3 text-white bg-[#0a6b60] hover:bg-[#09594d] border-b-4 border-[#09594d]  border-l-green-700 rounded-[13px] disabled:bg-gray-300 disabled:text-gray-500 disabled:border-gray-300 w-[100px]"
-            onClick={() => userjoin()}
-            disabled={!hasPermission}
-          >
-            Enter
-          </button>
-        </div>
-      </div>
-    </>
-  );
+                <div className="joinCard">
+                    <div className="joinHeader">
+                        <span>Join room</span>
+                        <strong>
+                            {hasPermission === null
+                                ? "Checking"
+                                : hasPermission
+                                  ? "Ready"
+                                  : "Blocked"}
+                        </strong>
+                    </div>
+
+                    <div className="statusStack">
+                        {isMobileDeviceError && (
+                            <div className="statusMessage warning">
+                                <AlertCircle size={18} />
+                                <span>
+                                    Some features are not supported on mobile
+                                    devices.
+                                </span>
+                            </div>
+                        )}
+
+                        {hasPermission === null && (
+                            <div className="statusMessage neutral">
+                                <ShieldCheck size={18} />
+                                <span>
+                                    Checking camera and microphone permissions.
+                                </span>
+                            </div>
+                        )}
+
+                        {hasPermission === false && (
+                            <div className="statusMessage error">
+                                <AlertCircle size={18} />
+                                <span>
+                                    Give camera and microphone permission to
+                                    proceed.
+                                </span>
+                            </div>
+                        )}
+                    </div>
+
+                    <label className="inputGroup">
+                        <span>Your name</span>
+                        <div>
+                            <UserRound size={18} />
+                            <input
+                                placeholder="Username"
+                                value={userName}
+                                maxLength={8}
+                                onChange={(e) => setUsername(e.target.value)}
+                            />
+                        </div>
+                    </label>
+
+                    <label className="inputGroup">
+                        <span>Room code</span>
+                        <div>
+                            <Video size={18} />
+                            <input
+                                placeholder="Room"
+                                value={roomName}
+                                maxLength={5}
+                                onChange={(e) => setRoomName(e.target.value)}
+                            />
+                        </div>
+                    </label>
+
+                    <button
+                        className="joinButton"
+                        onClick={() => userjoin()}
+                        disabled={!hasPermission || !userName || !roomName}
+                    >
+                        Enter room
+                        <ArrowRight size={18} />
+                    </button>
+                </div>
+            </section>
+        </main>
+    );
 }

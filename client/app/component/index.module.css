@@ -3,7 +3,7 @@
   align-items: center;
   position: relative;
   justify-content: center;
-  gap: 15px;
+  gap: 14px;
   display: flex;
   height: 100%;
   right: 0;
@@ -13,11 +13,11 @@
     @apply rounded-full text-white;
     padding: 10px;
     cursor: pointer;
-    background-color: theme('colors.secondary');
+    background-color: #334155;
 
     &:hover,
     &.active {
-      background-color: theme('colors.buttonPrimary');
+      background-color: #14b8a6;
     }
   }
   .whitesvg {
@@ -27,6 +27,16 @@
     width: 55px;
     height: 55px;
     padding: 12px;
+    border: 1px solid rgba(148, 163, 184, 0.2);
+    box-shadow: 0 10px 22px rgba(0, 0, 0, 0.2);
+    transition:
+      transform 0.18s ease,
+      background-color 0.18s ease,
+      box-shadow 0.18s ease;
+  }
+  .menuButton:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 14px 26px rgba(0, 0, 0, 0.24);
   }
   @media (max-width: 600px) {
     .whitesvg {
@@ -45,33 +55,51 @@
 
 /* copysection css starts */
 .copyContainer {
-  @apply text-black;
+  @apply text-white;
   display: flex;
   flex-direction: column;
   position: absolute;
-  border-color: black;
   align-items: center;
   justify-content: center;
-  padding-top: 15px;
-  margin-left: 20px;
-  margin-top: 0px;
-  /* border-radius: 15px; */
+  left: 18px;
+  top: 50%;
+  transform: translateY(-50%);
+  max-width: 220px;
 
   .copyHeading {
-    color: black;
+    color: #94a3b8;
+    font-size: 0.72rem;
+    font-weight: 800;
+    letter-spacing: 0;
+    text-transform: uppercase;
   }
   .copyDescription {
     @apply flex items-center text-sm;
     display: flex;
-    margin: 10px;
+    margin-top: 4px;
+    color: #f8fafc;
+    border-radius: 999px;
+    background: rgba(30, 41, 59, 0.9);
+    border: 1px solid rgba(148, 163, 184, 0.18);
+    padding: 7px 10px;
+    max-width: 100%;
+  }
+  .copyDescription span {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
 }
 
 @media (max-width: 800px) {
   .copyContainer {
-    padding-top: 1px;
-    margin-left: 10px;
+    left: 10px;
     flex-direction: row;
+    gap: 8px;
+    max-width: 145px;
+  }
+  .copyHeading {
+    display: none;
   }
 }
 
@@ -84,21 +112,31 @@
   object-fit: cover;
   width: 100%;
   height: 100%;
-  background-color: var(--secondary);
-  border: 1px solid black;
+  background:
+    radial-gradient(circle at 50% 0%, rgba(20, 184, 166, 0.2), transparent 34%),
+    #0f172a;
+  border: 1px solid rgba(148, 163, 184, 0.2);
   position: relative;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.03), 0 18px 34px rgba(0, 0, 0, 0.24);
 }
 
 .active {
-  @apply rounded-xl;
+  border-radius: 18px;
 }
 
 .notActive {
-  @apply rounded-xl;
+  border-radius: 18px;
 }
 
 .icon2 {
   @apply text-white absolute right-3 bottom-3;
+  z-index: 3;
+  border-radius: 999px;
+  background: rgba(15, 23, 42, 0.76);
+  padding: 5px;
+  width: 32px;
+  height: 32px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
 }
 
 .user {
@@ -109,26 +147,38 @@
 }
 .notPlaying {
   @apply flex items-center justify-center;
-  /* object-fit: contain; */
-  background-color: var(--fifth);
-  border: 1px solid black;
+  background:
+    radial-gradient(circle at center, rgba(45, 212, 191, 0.22), transparent 36%),
+    linear-gradient(135deg, #0f172a, #1e293b);
+  border: 1px solid rgba(148, 163, 184, 0.2);
 }
 .username {
   color: white;
   position: absolute;
-  left: 5px;
-  bottom: 5px;
-  padding: 5px 10px;
-  background-color: rgb(64, 64, 64);
-  border-radius: 8px;
+  left: 12px;
+  bottom: 12px;
+  padding: 6px 11px;
+  background-color: rgba(15, 23, 42, 0.74);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 999px;
+  font-size: 0.86rem;
+  font-weight: 700;
+  backdrop-filter: blur(10px);
 }
 .notplayingusername {
   color: white;
   position: absolute;
-  font-size: 70px;
+  font-size: 58px;
+  font-weight: 800;
   justify-content: center;
-
-  border-radius: 100%;
+  border-radius: 999px;
+  width: 112px;
+  height: 112px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #14b8a6, #2563eb);
+  text-transform: uppercase;
 }
 /* player css ends */
 
@@ -136,12 +186,14 @@
 .menuContainer {
   display: flex;
   flex-direction: row;
-  gap: 15px;
+  gap: 14px;
 }
 .mediaContainer {
-  @apply flex flex-row rounded-full bg-white items-center;
+  @apply flex flex-row rounded-full items-center;
   gap: 8px;
-  background-color: var(--fourth);
+  background-color: rgba(30, 41, 59, 0.9);
+  border: 1px solid rgba(148, 163, 184, 0.18);
+  padding: 3px;
 }
 @media (max-width: 600px) {
   .bottomMenu {
@@ -188,12 +240,17 @@
 .menuDropdownButton {
   padding: 4px 8px;
   border-radius: 9999px;
-  background: #fff;
   font-size: 1rem;
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  background-color: var(--fourth);
+  background-color: rgba(15, 23, 42, 0.7);
+  color: #cbd5e1;
+  transition: background-color 0.18s ease;
+}
+
+.menuDropdownButton:hover {
+  background-color: rgba(51, 65, 85, 0.92);
 }
 
 @media (max-width: 600px) {

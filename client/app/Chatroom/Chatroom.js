@@ -616,13 +616,16 @@ function Chatroom() {
 
     return (
         <>
-            <div className="absolute top-[3px] right-[10px] ">
+            <div className={styles.recordControls}>
                 {mediaBlobUrl && (
-                    <button class="  text-gray-800 font-bold  rounded inline-flex items-center mr-[10px]">
+                    <button
+                        className={styles.downloadButton}
+                        title="Download recording"
+                    >
                         <span>
                             <a href={mediaBlobUrl} download="ScreenRecording">
                                 <svg
-                                    class="fill-current w-4 h-4 text-[var(--fourth)] hover:bg-[var(--secondary)]"
+                                    className="fill-current w-4 h-4"
                                     xmlns="http://www.w3.org/2000/svg"
                                     viewBox="0 0 20 20"
                                 >
@@ -642,31 +645,24 @@ function Chatroom() {
                         onChange={handleCheckboxChange}
                     />
                     <span
-                        className={`slider mr-3 flex h-[26px] w-[50px] items-center rounded-full p-1 duration-200 ${
-                            isChecked ? "bg-red-500" : "bg-[var(--secondary)]"
+                        className={`${styles.recordSwitch} ${
+                            isChecked ? styles.recordingSwitch : ""
                         }`}
                     >
                         <span
-                            className={`dot h-[18px] w-[18px] rounded-full bg-white duration-200 ${
-                                isChecked ? "translate-x-6" : ""
+                            className={`${styles.recordDot} ${
+                                isChecked ? styles.recordingDot : ""
                             }`}
                         ></span>
                     </span>
-                    <span className="label flex items-center text-sm font-medium text-black"></span>
                 </label>
             </div>
             <div className={styles.main}>
                 <div className={styles.toppart}>
                     {!playerHighlighted && (
-                        <div
-                            className="justify-center w-28"
-                            style={{
-                                width: "100%",
-                                marginLeft: "30%",
-                                fontSize: "20px",
-                            }}
-                        >
-                            reload page if your face is not visible
+                        <div className={styles.lobbyNotice}>
+                            Waiting for your camera. Reload if your preview does
+                            not appear.
                         </div>
                     )}
                     <div className={playerContainerClass}>
@@ -684,24 +680,22 @@ function Chatroom() {
                                     nonHighlightedPlayers[playerId];
 
                                 return (
-                                    <>
-                                        <Player
-                                            playerId={playerId}
-                                            url={url}
-                                            muted={muted}
-                                            playing={playing}
-                                            isActive={false}
-                                            name={
-                                                data.find(
-                                                    (item) =>
-                                                        item.peerId ===
-                                                        playerId,
-                                                )?.usname
-                                            }
-                                            ishost={ishost}
-                                            mictoggleuser={mictoggleuser}
-                                        />
-                                    </>
+                                    <Player
+                                        key={playerId}
+                                        playerId={playerId}
+                                        url={url}
+                                        muted={muted}
+                                        playing={playing}
+                                        isActive={false}
+                                        name={
+                                            data.find(
+                                                (item) =>
+                                                    item.peerId === playerId,
+                                            )?.usname
+                                        }
+                                        ishost={ishost}
+                                        mictoggleuser={mictoggleuser}
+                                    />
                                 );
                             },
                         )}
@@ -721,45 +715,105 @@ function Chatroom() {
                         <div className={styles.datalist}>
                             {/*displaying the copysection containing the roomid and the list of all users in room */}
 
-                            <div className="   h-full relative  text-wrap overflow-auto border-black rounded-[15px]   scrollbar-thin scrollbar-thumb-rounded-sm scrollbar-thumb-black">
+                            <div className={styles.panelHeader}>
+                                <div>
+                                    <span>Participants</span>
+                                    <strong>{length}</strong>
+                                </div>
+                            </div>
+                            <div className={styles.participantList}>
                                 {data.map(
                                     (item, index) =>
                                         item.room === roomId && ( //will only show the participant of that particular room
                                             <div
                                                 key={index}
-                                                className="data-item"
+                                                className={styles.participantItem}
                                             >
-                                                <div className="flex flex-row p-2 ">
+                                                <div
+                                                    className={
+                                                        styles.participantMeta
+                                                    }
+                                                >
+                                                    <span
+                                                        className={
+                                                            styles.participantAvatar
+                                                        }
+                                                    >
+                                                        {item.usname?.charAt(
+                                                            0,
+                                                        ) || "U"}
+                                                    </span>
                                                     {item.sId === roomhost ? (
                                                         item.sId ===
                                                         socket.id ? (
-                                                            <p className="text-black">
-                                                                Me(Host) :{" "}
+                                                            <p
+                                                                className={
+                                                                    styles.participantName
+                                                                }
+                                                            >
                                                                 {item.usname}
+                                                                <span
+                                                                    className={
+                                                                        styles.hostBadge
+                                                                    }
+                                                                >
+                                                                    Me, Host
+                                                                </span>
                                                             </p>
                                                         ) : (
-                                                            <p className="text-black">
-                                                                Host :{" "}
+                                                            <p
+                                                                className={
+                                                                    styles.participantName
+                                                                }
+                                                            >
                                                                 {item.usname}
+                                                                <span
+                                                                    className={
+                                                                        styles.hostBadge
+                                                                    }
+                                                                >
+                                                                    Host
+                                                                </span>
                                                             </p>
                                                         )
                                                     ) : item.sId ===
                                                       socket.id ? (
-                                                        <p className="text-black">
-                                                            Me : {item.usname}
+                                                        <p
+                                                            className={
+                                                                styles.participantName
+                                                            }
+                                                        >
+                                                            {item.usname}
+                                                            <span
+                                                                className={
+                                                                    styles.hostBadge
+                                                                }
+                                                            >
+                                                                Me
+                                                            </span>
                                                         </p>
                                                     ) : (
-                                                        <p className="text-black">
-                                                            User : {item.usname}
+                                                        <p
+                                                            className={
+                                                                styles.participantName
+                                                            }
+                                                        >
+                                                            {item.usname}
                                                         </p>
                                                     )}
 
                                                     {socket.id === roomhost &&
                                                         item.sId !=
                                                             socket.id && ( //will only show the kick button to the host of the room
-                                                            <div>
+                                                            <div
+                                                                className={
+                                                                    styles.participantActions
+                                                                }
+                                                            >
                                                                 <button
-                                                                    className="rounded-full w-[25px] bg-buttonPrimary justify-between p-1 mx-2 text-white cursor-pointer right-2 absolute"
+                                                                    className={
+                                                                        styles.iconButton
+                                                                    }
                                                                     onClick={() =>
                                                                         removeuser(
                                                                             item.peerId,
@@ -781,7 +835,9 @@ function Chatroom() {
                                                                         size={
                                                                             25
                                                                         }
-                                                                        className="bg-buttonPrimary rounded-full p-[5px] justify-between mx-2 text-white cursor-pointer right-10 absolute"
+                                                                        className={
+                                                                            styles.iconButton
+                                                                        }
                                                                         onClick={() =>
                                                                             mictoggleuser(
                                                                                 item.userid,
@@ -800,22 +856,28 @@ function Chatroom() {
                     )}
                     {showChat && (
                         <div className={styles.chatcontainer}>
-                            <div className="flex flex-col-reverse   mt-5   overflow-auto  scrollbar-thin scrollbar-thumb-rounded-sm scrollbar-thumb-black">
-                                <div className="flex flex-col gap-2 mr-[5px]">
+                            <div className={styles.panelHeader}>
+                                <div>
+                                    <span>Room chat</span>
+                                    <strong>{mesuser.length}</strong>
+                                </div>
+                            </div>
+                            <div className={styles.chatMessages}>
+                                <div className="flex flex-col gap-2">
                                     {mesuser.map((msg, index) =>
                                         msg.ruser == user ? (
                                             <div
                                                 key={index}
-                                                className="bg-primary flex flex-col self-end max-w-60 pb-1 border-[1px] border-black rounded-[30px] bg-zinc-700"
+                                                className={styles.ownMessage}
                                             >
-                                                <p className="text-wrap m-1 p-1  word text-white ">
+                                                <p className={styles.messageText}>
                                                     {msg.nmessages}
                                                 </p>
                                             </div>
                                         ) : (
                                             <div
                                                 key={index}
-                                                className="bg-zinc-900 flex flex-col  max-w-60 border-[1.5px] border-white  w-fit rounded-2xl  p-2  text-white "
+                                                className={styles.otherMessage}
                                             >
                                                 {msg.ruser ===
                                                     mesuser[
@@ -823,16 +885,27 @@ function Chatroom() {
                                                             ? index - 1
                                                             : 0
                                                     ].ruser && index != 0 ? (
-                                                    <span className=" bg-zinc-900  text-white  text-wrap word overflow-x-auto  pb-1 pt-1 rounded-2xl pl-0 ">
+                                                    <span
+                                                        className={
+                                                            styles.messageText
+                                                        }
+                                                    >
                                                         {msg.nmessages}
                                                     </span>
                                                 ) : (
                                                     <div>
-                                                        <h1 className="font-semibold text-messageuse">
-                                                            {" "}
-                                                            {msg.ruser} :
+                                                        <h1
+                                                            className={
+                                                                styles.messageAuthor
+                                                            }
+                                                        >
+                                                            {msg.ruser}
                                                         </h1>
-                                                        <span className=" bg-zinc-900  text-white  text-wrap word overflow-x-auto  pb-1 pt-1 rounded-2xl pl-0 ">
+                                                        <span
+                                                            className={
+                                                                styles.messageText
+                                                            }
+                                                        >
                                                             {msg.nmessages}
                                                         </span>
                                                     </div>
@@ -844,12 +917,12 @@ function Chatroom() {
                             </div>
 
                             <form
-                                className={styles.form}
+                                className={styles.chatForm}
                                 onSubmit={handleSubmit}
                             >
                                 <input
                                     type="text"
-                                    placeholder="enter message"
+                                    placeholder="Message"
                                     className={styles.input}
                                     label="Message"
                                     value={message}
@@ -857,7 +930,7 @@ function Chatroom() {
                                 ></input>
 
                                 <button type="submit" className="">
-                                    send
+                                    Send
                                 </button>
                             </form>
                         </div>
