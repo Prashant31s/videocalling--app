@@ -10,7 +10,7 @@ import Bottom from "../component/Bottom";
 import CopySection from "../component/CopySection";
 import styles from "./Chatroom.module.css";
 import { cloneDeep } from "lodash";
-import { Mic } from "lucide-react";
+import { Mic, Send, Users } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { createBrowserHistory } from "history";
 import ReactPlayer from "react-player";
@@ -114,34 +114,75 @@ function Chatroom() {
     }, [myId, myidnew]);
     useEffect(() => {
         if (!socket || !peer || !stream || !usernameApproved) return;
+        const activeConnections = new Set();
+
         const handleUserConnected = (newUser, roomtohost, roomuser) => {
-            const call = peer.call(newUser, stream);
-            call.on("stream", (incomingStream) => {
-                //make a call to new user onnected and also recieve stream from it and set the user players of that room just add on the new user
-                setPlayers((prev) => ({
-                    ...prev,
-                    [newUser]: {
-                        url: incomingStream,
-                        muted: true,
-                        playing: true,
-                    },
-                }));
+            // Prevent duplicate connection attempts
+            if (activeConnections.has(newUser)) {
+                console.log(`Connection already in progress for ${newUser}`);
+                return;
+            }
+            activeConnections.add(newUser);
 
-                setUsers((prev) => ({
-                    ...prev,
-                    [newUser]: call,
-                }));
-            });
+            const callStartTime = performance.now();
+            console.log(`Initiating call to ${newUser}`);
 
-            updateAudioStreams(); // Adjust this function to add the new stream to the recording
-            // }
+            try {
+                const call = peer.call(newUser, stream, {
+                    metadata: { initiator: myId },
+                });
+
+                const streamTimeout = setTimeout(() => {
+                    console.warn(
+                        `Stream not received from ${newUser} after 8 seconds`,
+                    );
+                }, 8000);
+
+                call.on("stream", (incomingStream) => {
+                    clearTimeout(streamTimeout);
+                    const callEndTime = performance.now();
+                    console.log(
+                        `Received stream from ${newUser} in ${(callEndTime - callStartTime).toFixed(2)}ms`,
+                    );
+
+                    //make a call to new user onnected and also recieve stream from it and set the user players of that room just add on the new user
+                    setPlayers((prev) => ({
+                        ...prev,
+                        [newUser]: {
+                            url: incomingStream,
+                            muted: true,
+                            playing: true,
+                        },
+                    }));
+
+                    setUsers((prev) => ({
+                        ...prev,
+                        [newUser]: call,
+                    }));
+                });
+
+                call.on("error", (error) => {
+                    console.error(`Call error with ${newUser}:`, error);
+                    activeConnections.delete(newUser);
+                });
+
+                call.on("close", () => {
+                    activeConnections.delete(newUser);
+                });
+
+                updateAudioStreams(); // Adjust this function to add the new stream to the recording
+            } catch (error) {
+                console.error(`Error calling ${newUser}:`, error);
+                activeConnections.delete(newUser);
+            }
         };
         socket.on("user-connected", handleUserConnected); //a user is connected
 
         return () => {
             socket.off("user-connected", handleUserConnected);
+            activeConnections.clear();
         };
-    }, [peer, setPlayers, socket, stream, usernameApproved]);
+    }, [peer, setPlayers, socket, stream, usernameApproved, myId]);
 
     const handleUserLeave = (userId) => {
         // fucntion to handle if a person has leaved the room
@@ -263,25 +304,48 @@ function Chatroom() {
 
     useEffect(() => {
         if (!usernameApproved || !peer || !stream) return;
-        peer.on("call", (call) => {
+
+        const handleIncomingCall = (call) => {
             // the peer wiil make a call and also receive the call in the room and set the incoming stream in players so thatit can be shown
             const { peer: callerId } = call;
-            call.answer(stream);
+            const answerStartTime = performance.now();
+
+            try {
+                call.answer(stream);
+                console.log(`Answered call from ${callerId}`);
+            } catch (error) {
+                console.error(`Error answering call from ${callerId}:`, error);
+                return;
+            }
+
+            const streamTimeout = setTimeout(() => {
+                console.warn(
+                    `Stream not received from ${callerId} after 8 seconds`,
+                );
+            }, 8000);
 
             call.on("stream", (incomingStream) => {
+                clearTimeout(streamTimeout);
+                const answerEndTime = performance.now();
+                console.log(
+                    `Stream from ${callerId} received in ${(answerEndTime - answerStartTime).toFixed(2)}ms`,
+                );
+
                 if (!check) {
                     setScreenStream(incomingStream);
                     setCurrScreenStream(incomingStream);
                     check = true;
                 } else {
                     if (myId && callerId !== myidnew) {
-                        let currvideo;
-                        let curraudio;
-                        for (let i = 0; i < data.length; i++) {
-                            if (data[i].peerId === callerId) {
-                                currvideo = data[i].video;
-                                curraudio = data[i].audio;
-                            }
+                        let currvideo = true;
+                        let curraudio = true;
+                        // Optimize the lookup
+                        const userdata = data.find(
+                            (d) => d.peerId === callerId,
+                        );
+                        if (userdata) {
+                            currvideo = userdata.video;
+                            curraudio = userdata.audio;
                         }
                         setPlayers((prev) => ({
                             ...prev,
@@ -298,7 +362,18 @@ function Chatroom() {
                     }
                 }
             });
-        });
+
+            call.on("error", (error) => {
+                console.error(`Error in call with ${callerId}:`, error);
+                clearTimeout(streamTimeout);
+            });
+        };
+
+        peer.on("call", handleIncomingCall);
+
+        return () => {
+            peer.off("call", handleIncomingCall);
+        };
     }, [
         usernameApproved,
         peer,
@@ -591,73 +666,94 @@ function Chatroom() {
     if (socket.id === roomhost) {
         ishost = true;
     }
-    if (length === 1 && !screenStream) {
+    if (screenStream) {
+        if (length <= 1) {
+            playerContainerClass += ` ${styles.screenOne}`;
+        } else if (length === 2) {
+            playerContainerClass += ` ${styles.screenTwo}`;
+        } else if (length === 3) {
+            playerContainerClass += ` ${styles.screenThree}`;
+        } else if (length === 4) {
+            playerContainerClass += ` ${styles.screenFour}`;
+        } else if (length === 5) {
+            playerContainerClass += ` ${styles.screenFive}`;
+        } else {
+            playerContainerClass += ` ${styles.screenSix}`;
+        }
+    } else if (length === 1) {
         playerContainerClass += ` ${styles.onePlayer}`;
-    } else if (
-        (length === 2 && !screenStream) ||
-        (length === 1 && screenStream)
-    ) {
+    } else if (length === 2) {
         playerContainerClass += ` ${styles.twoPlayers}`;
-    } else if (length === 3 && !screenStream) {
+    } else if (length === 3) {
         playerContainerClass += ` ${styles.threePlayers}`;
-    } else if (length === 4 && !screenStream) {
+    } else if (length === 4) {
         playerContainerClass += ` ${styles.fourPlayers}`;
     } else if (length === 5) {
         playerContainerClass += ` ${styles.fivePlayers}`;
     } else if (length === 6) {
         playerContainerClass += ` ${styles.sixPlayers}`;
-    } else if (length === 2 && screenStream) {
-        playerContainerClass += ` ${styles.screenTwo}`;
-    } else if (length === 3 && screenStream) {
-        playerContainerClass += ` ${styles.screenThree}`;
-    } else if (length === 4 && screenStream) {
-        playerContainerClass += ` ${styles.screenFour}`;
     }
+
+    const roomParticipantCount =
+        data.filter((item) => item.room === roomId).length || length;
 
     return (
         <>
-            <div className={styles.recordControls}>
-                {mediaBlobUrl && (
-                    <button
-                        className={styles.downloadButton}
-                        title="Download recording"
-                    >
-                        <span>
-                            <a href={mediaBlobUrl} download="ScreenRecording">
-                                <svg
-                                    className="fill-current w-4 h-4"
-                                    xmlns="http://www.w3.org/2000/svg"
-                                    viewBox="0 0 20 20"
-                                >
-                                    <path d="M13 8V2H7v6H2l8 8 8-8h-5zM0 18h20v2H0v-2z" />
-                                </svg>
-                            </a>
-                        </span>
-                    </button>
-                )}
-
-                <label className="autoSaverSwitch relative inline-flex cursor-pointer select-none items-center">
-                    <input
-                        type="checkbox"
-                        name="autoSaver"
-                        className="sr-only"
-                        checked={isChecked}
-                        onChange={handleCheckboxChange}
-                    />
-                    <span
-                        className={`${styles.recordSwitch} ${
-                            isChecked ? styles.recordingSwitch : ""
-                        }`}
-                    >
-                        <span
-                            className={`${styles.recordDot} ${
-                                isChecked ? styles.recordingDot : ""
-                            }`}
-                        ></span>
-                    </span>
-                </label>
-            </div>
             <div className={styles.main}>
+                <div className={styles.roomHeader}>
+                    <div
+                        className={styles.participantCount}
+                        aria-label={`${roomParticipantCount} participants in room`}
+                        title={`${roomParticipantCount} participants`}
+                    >
+                        <Users size={18} strokeWidth={2.4} />
+                        <span>{roomParticipantCount}</span>
+                    </div>
+                    <div className={styles.recordControls}>
+                        {mediaBlobUrl && (
+                            <button
+                                className={styles.downloadButton}
+                                title="Download recording"
+                            >
+                                <span>
+                                    <a
+                                        href={mediaBlobUrl}
+                                        download="ScreenRecording"
+                                    >
+                                        <svg
+                                            className="fill-current w-4 h-4"
+                                            xmlns="http://www.w3.org/2000/svg"
+                                            viewBox="0 0 20 20"
+                                        >
+                                            <path d="M13 8V2H7v6H2l8 8 8-8h-5zM0 18h20v2H0v-2z" />
+                                        </svg>
+                                    </a>
+                                </span>
+                            </button>
+                        )}
+
+                        <label className="autoSaverSwitch relative inline-flex cursor-pointer select-none items-center">
+                            <input
+                                type="checkbox"
+                                name="autoSaver"
+                                className="sr-only"
+                                checked={isChecked}
+                                onChange={handleCheckboxChange}
+                            />
+                            <span
+                                className={`${styles.recordSwitch} ${
+                                    isChecked ? styles.recordingSwitch : ""
+                                }`}
+                            >
+                                <span
+                                    className={`${styles.recordDot} ${
+                                        isChecked ? styles.recordingDot : ""
+                                    }`}
+                                ></span>
+                            </span>
+                        </label>
+                    </div>
+                </div>
                 <div className={styles.toppart}>
                     {!playerHighlighted && (
                         <div className={styles.lobbyNotice}>
@@ -667,12 +763,17 @@ function Chatroom() {
                     )}
                     <div className={playerContainerClass}>
                         {screenStream && (
-                            <ReactPlayer
-                                url={screenStream}
-                                playing={true}
-                                width="100%"
-                                height="100%"
-                            />
+                            <div className={styles.screenShareTile}>
+                                <ReactPlayer
+                                    url={screenStream}
+                                    playing={true}
+                                    width="100%"
+                                    height="100%"
+                                />
+                                <span className={styles.screenShareLabel}>
+                                    Screen share
+                                </span>
+                            </div>
                         )}
                         {Object.keys(nonHighlightedPlayers).map(
                             (playerId, index) => {
@@ -727,7 +828,9 @@ function Chatroom() {
                                         item.room === roomId && ( //will only show the participant of that particular room
                                             <div
                                                 key={index}
-                                                className={styles.participantItem}
+                                                className={
+                                                    styles.participantItem
+                                                }
                                             >
                                                 <div
                                                     className={
@@ -819,10 +922,11 @@ function Chatroom() {
                                                                             item.peerId,
                                                                         )
                                                                     }
+                                                                    title="Remove user"
                                                                 >
                                                                     <img
                                                                         src={`https://www.svgrepo.com/show/246569/remove-user.svg`}
-                                                                        alt="button icon"
+                                                                        alt="remove user"
                                                                         className={
                                                                             styles.whitesvg
                                                                         }
@@ -833,16 +937,17 @@ function Chatroom() {
                                                                     false && (
                                                                     <Mic
                                                                         size={
-                                                                            25
+                                                                            20
                                                                         }
                                                                         className={
-                                                                            styles.iconButton
+                                                                            styles.micIcon
                                                                         }
                                                                         onClick={() =>
                                                                             mictoggleuser(
-                                                                                item.userid,
+                                                                                item.peerId,
                                                                             )
-                                                                        } //will exectute the remove user function for that kicked userid
+                                                                        }
+                                                                        title="Unmute user"
                                                                     />
                                                                 )}
                                                             </div>
@@ -870,7 +975,11 @@ function Chatroom() {
                                                 key={index}
                                                 className={styles.ownMessage}
                                             >
-                                                <p className={styles.messageText}>
+                                                <p
+                                                    className={
+                                                        styles.messageText
+                                                    }
+                                                >
                                                     {msg.nmessages}
                                                 </p>
                                             </div>
@@ -929,8 +1038,8 @@ function Chatroom() {
                                     onChange={(e) => setMessage(e.target.value)}
                                 ></input>
 
-                                <button type="submit" className="">
-                                    Send
+                                <button type="submit" aria-label="Send message">
+                                    <Send size={20} strokeWidth={2.4} />
                                 </button>
                             </form>
                         </div>
