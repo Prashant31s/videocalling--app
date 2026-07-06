@@ -1,5 +1,10 @@
 "use client";
-import React, { useEffect, useState, useRef, Suspense } from "react";
+import React, {
+    useEffect,
+    useState,
+    useRef,
+    Suspense,
+} from "react";
 import socket from "../components/connect";
 import { useSearchParams } from "next/navigation";
 import usePeer from "../hooks/usePeer";
@@ -37,7 +42,9 @@ function Chatroom() {
     const [showScreen, setShowScreen] = useState(false);
     const [users, setUsers] = useState([]);
     const [myidnew, setMyidnew] = useState();
-    let playerContainerClass = styles.PlayerContainer;
+    const [playerContainerClass, setPlayerContainerClass] = useState(
+        styles.PlayerContainer,
+    );
 
     const [mesuser, setMesuser] = useState([]);
     const [message, setMessage] = useState("");
@@ -68,7 +75,185 @@ function Chatroom() {
     const audioContextRef = useRef(null); // Persistent AudioContext
     const mediaStreamDestinationRef = useRef(null);
     const [isChecked, setIsChecked] = useState(false);
-    let ishost = false;
+    const [isHost, setIsHost] = useState(false);
+
+    const handleUserLeave = (userId) => {
+        // fucntion to handle if a person has leaved the room
+        users[userId]?.close(); //if the user leaves delete its data from the client side player so that its player doesnt dhow in the screen
+        const playersCopy = cloneDeep(players);
+        delete playersCopy[userId];
+        setPlayers(playersCopy);
+    };
+
+    const removeuser = (userid) => {
+        // if the user want to leave from the room by clicking the button it will notify the room that the userid is leaving the roomId emitting tho server
+        socket.emit("removeuser", userid, roomId);
+    };
+
+    const mictoggleuser = (userid) => {
+        socket.emit("host-toggle-audio", userid, roomId);
+    };
+
+    const toggleDataList = () => {
+        if (showChat) {
+            setShowChat((prev) => !prev);
+        }
+        setShowDataList((prev) => !prev); // Toggle the visibility state
+    };
+
+    const toggleChat = () => {
+        setShowChat((prev) => !prev);
+        if (showDataList) {
+            setShowDataList((prev) => !prev);
+        }
+    };
+
+    const handleSubmit = (e) => {
+        e.preventDefault();
+        if (message) {
+            socket.emit("message", { message, roomId, user });
+        }
+
+        setMessage("");
+    };
+    // xstream = null;
+
+    const shareScreen = async () => {
+        if (screenStream) {
+            if (screenpeerid === myId) {
+                screenStream.getTracks().forEach((track) => track.stop());
+                setScreenStream(null);
+                setCurrScreenStream(null);
+                socket.emit("stream-off", roomId);
+                setScrShare(false);
+                setShowScreen(false);
+            }
+
+            return;
+        } else {
+            try {
+                const screenStreame =
+                    await navigator.mediaDevices.getDisplayMedia({
+                        video: true,
+                    });
+                setScreenStream(screenStreame);
+                //xstream = screenStreame;
+                setShowScreen(true);
+                setScrShare(true);
+            } catch (error) {
+                console.error("Error sharing screen:", error);
+            }
+        }
+    };
+
+    const handleCheckboxChange = () => {
+        if (!isChecked) {
+            startRecording();
+        } else {
+            stopRecording();
+        }
+    };
+
+    const updateAudioStreams = () => {
+        const dest = mediaStreamDestinationRef.current; // Use the existing MediaStreamDestination
+
+        Object.keys(players).forEach((playerId) => {
+            const { url, muted } = players[playerId];
+            const stream = new MediaStream();
+
+            if (muted) {
+                url.getAudioTracks()[0].enabled = false;
+            } else {
+                url.getAudioTracks()[0].enabled = true;
+            }
+
+            const audioTracks = url.getAudioTracks();
+            if (audioTracks.length > 0) {
+                audioTracks.forEach((track) => {
+                    stream.addTrack(track);
+                });
+
+                try {
+                    const source =
+                        audioContextRef.current.createMediaStreamSource(stream);
+                    source.connect(dest); // Connect the new stream to the existing destination
+                } catch (error) {
+                    console.error(
+                        `Failed to create MediaStreamSource for player ${playerId}:`,
+                        error,
+                    );
+                }
+            } else {
+                console.warn(`Player ${playerId} has no audio tracks.`);
+            }
+        });
+
+        finalDestRef.current = dest;
+    };
+
+    const startRecording = async () => {
+        if (!audioContextRef.current) {
+            audioContextRef.current = new AudioContext();
+        }
+        if (!mediaStreamDestinationRef.current) {
+            //destinationation to be connected with audio context
+            mediaStreamDestinationRef.current =
+                audioContextRef.current.createMediaStreamDestination();
+        }
+
+        const screenStream = await navigator.mediaDevices.getDisplayMedia({
+            video: { mediaSource: "screen" },
+            audio: false,
+            selfBrowserSurface: "include",
+            preferCurrentTab: true,
+        });
+
+        updateAudioStreams(); // Add all current streams to the ongoing recording
+
+        const combinedStream = new MediaStream([
+            ...screenStream.getVideoTracks(),
+            ...mediaStreamDestinationRef.current.stream.getAudioTracks(),
+        ]);
+
+        const mediaRecorder = new MediaRecorder(combinedStream);
+        mediaRecorderRef.current = mediaRecorder;
+
+        mediaRecorder.ondataavailable = (event) => {
+            if (event.data.size > 0) {
+                chunksRef.current.push(event.data);
+            }
+        };
+
+        mediaRecorder.onstop = () => {
+            const blob = new Blob(chunksRef.current, { type: "video/webm" });
+            const url = URL.createObjectURL(blob);
+            setMediaBlobUrl(url);
+            chunksRef.current = [];
+            setIsChecked(false);
+            screenStream.getTracks().forEach((track) => track.stop());
+            combinedStream.getTracks().forEach((track) => track.stop());
+        };
+
+        mediaRecorder.onstart = () => {
+            setIsChecked(true); //runs only when recording is started properly to change button state
+        };
+
+        screenStream.oninactive = () => {
+            mediaRecorder.stop();
+            setRecording(false);
+            setIsChecked(false);
+        };
+
+        mediaRecorder.start();
+        setRecording(true);
+    };
+
+    const stopRecording = () => {
+        if (mediaRecorderRef.current) {
+            mediaRecorderRef.current.stop();
+            setRecording(false);
+        }
+    };
 
     useEffect(() => {
         if (stream && players[myId]) {
@@ -113,6 +298,7 @@ function Chatroom() {
             setMyidnew(myId);
         }
     }, [myId, myidnew]);
+
     useEffect(() => {
         if (!socket || !peer || !stream || !usernameApproved) return;
         const activeConnections = new Set();
@@ -185,13 +371,6 @@ function Chatroom() {
         };
     }, [peer, setPlayers, socket, stream, usernameApproved, myId]);
 
-    const handleUserLeave = (userId) => {
-        // fucntion to handle if a person has leaved the room
-        users[userId]?.close(); //if the user leaves delete its data from the client side player so that its player doesnt dhow in the screen
-        const playersCopy = cloneDeep(players);
-        delete playersCopy[userId];
-        setPlayers(playersCopy);
-    };
     useEffect(() => {
         if (!socket || !usernameApproved) return;
         const handleToggleAudio = (userId, roomuser) => {
@@ -293,6 +472,7 @@ function Chatroom() {
         mesuser,
         changedevice,
     ]);
+
     useEffect(() => {
         socket.on("receive-message", ({ message, user, messageshistory }) => {
             let mes = mesuser;
@@ -442,77 +622,18 @@ function Chatroom() {
         };
     }, [usernameApproved, data, length]);
 
-    const removeuser = (userid) => {
-        // if the user want to leave from the room by clicking the button it will notify the room that the userid is leaving the roomId emitting tho server
-        socket.emit("removeuser", userid, roomId);
-    };
-
-    const mictoggleuser = (userid) => {
-        socket.emit("host-toggle-audio", userid, roomId);
-    };
-
-    const toggleDataList = () => {
-        if (showChat) {
-            setShowChat((prev) => !prev);
-        }
-        setShowDataList((prev) => !prev); // Toggle the visibility state
-    };
-
-    const toggleChat = () => {
-        setShowChat((prev) => !prev);
-        if (showDataList) {
-            setShowDataList((prev) => !prev);
-        }
-    };
-
-    const handleSubmit = (e) => {
-        e.preventDefault();
-        if (message) {
-            socket.emit("message", { message, roomId, user });
-        }
-
-        setMessage("");
-    };
-    // xstream = null;
-
-    const shareScreen = async () => {
+    useEffect(() => {
         if (screenStream) {
-            if (screenpeerid === myId) {
+            screenStream.getVideoTracks()[0].onended = function () {
                 screenStream.getTracks().forEach((track) => track.stop());
                 setScreenStream(null);
                 setCurrScreenStream(null);
                 socket.emit("stream-off", roomId);
                 setScrShare(false);
                 setShowScreen(false);
-            }
-
-            return;
-        } else {
-            try {
-                const screenStreame =
-                    await navigator.mediaDevices.getDisplayMedia({
-                        video: true,
-                    });
-                setScreenStream(screenStreame);
-                //xstream = screenStreame;
-                setShowScreen(true);
-                setScrShare(true);
-            } catch (error) {
-                console.error("Error sharing screen:", error);
-            }
+            };
         }
-    };
-
-    if (screenStream) {
-        screenStream.getVideoTracks()[0].onended = function () {
-            screenStream.getTracks().forEach((track) => track.stop());
-            setScreenStream(null);
-            setCurrScreenStream(null);
-            socket.emit("stream-off", roomId);
-            setScrShare(false);
-            setShowScreen(false);
-        };
-    }
+    }, [screenStream]);
 
     useEffect(() => {
         if (scrShare) {
@@ -543,120 +664,11 @@ function Chatroom() {
         };
     }, [scrShare, players]);
 
-    const handleCheckboxChange = () => {
-        if (!isChecked) {
-            startRecording();
-        } else {
-            stopRecording();
-        }
-    };
-
-    const updateAudioStreams = () => {
-        const dest = mediaStreamDestinationRef.current; // Use the existing MediaStreamDestination
-
-        Object.keys(players).forEach((playerId) => {
-            const { url, muted } = players[playerId];
-            const stream = new MediaStream();
-
-            if (muted) {
-                url.getAudioTracks()[0].enabled = false;
-            } else {
-                url.getAudioTracks()[0].enabled = true;
-            }
-
-            const audioTracks = url.getAudioTracks();
-            if (audioTracks.length > 0) {
-                audioTracks.forEach((track) => {
-                    stream.addTrack(track);
-                });
-
-                try {
-                    const source =
-                        audioContextRef.current.createMediaStreamSource(stream);
-                    source.connect(dest); // Connect the new stream to the existing destination
-                } catch (error) {
-                    console.error(
-                        `Failed to create MediaStreamSource for player ${playerId}:`,
-                        error,
-                    );
-                }
-            } else {
-                console.warn(`Player ${playerId} has no audio tracks.`);
-            }
-        });
-
-        finalDestRef.current = dest;
-    };
-
-    const startRecording = async () => {
-        if (!audioContextRef.current) {
-            audioContextRef.current = new AudioContext();
-        }
-        if (!mediaStreamDestinationRef.current) {
-            //destinationation to be connected with audio context
-            mediaStreamDestinationRef.current =
-                audioContextRef.current.createMediaStreamDestination();
-        }
-
-        const screenStream = await navigator.mediaDevices.getDisplayMedia({
-            video: { mediaSource: "screen" },
-            audio: false,
-            selfBrowserSurface: "include",
-            preferCurrentTab: true,
-        });
-
-        updateAudioStreams(); // Add all current streams to the ongoing recording
-
-        const combinedStream = new MediaStream([
-            ...screenStream.getVideoTracks(),
-            ...mediaStreamDestinationRef.current.stream.getAudioTracks(),
-        ]);
-
-        const mediaRecorder = new MediaRecorder(combinedStream);
-        mediaRecorderRef.current = mediaRecorder;
-
-        mediaRecorder.ondataavailable = (event) => {
-            if (event.data.size > 0) {
-                chunksRef.current.push(event.data);
-            }
-        };
-
-        mediaRecorder.onstop = () => {
-            const blob = new Blob(chunksRef.current, { type: "video/webm" });
-            const url = URL.createObjectURL(blob);
-            setMediaBlobUrl(url);
-            chunksRef.current = [];
-            setIsChecked(false);
-            screenStream.getTracks().forEach((track) => track.stop());
-            combinedStream.getTracks().forEach((track) => track.stop());
-        };
-
-        mediaRecorder.onstart = () => {
-            setIsChecked(true); //runs only when recording is started properly to change button state
-        };
-
-        screenStream.oninactive = () => {
-            mediaRecorder.stop();
-            setRecording(false);
-            setIsChecked(false);
-        };
-
-        mediaRecorder.start();
-        setRecording(true);
-    };
-
     useEffect(() => {
         if (isChecked) {
             updateAudioStreams();
         }
     }, [players]);
-
-    const stopRecording = () => {
-        if (mediaRecorderRef.current) {
-            mediaRecorderRef.current.stop();
-            setRecording(false);
-        }
-    };
 
     useEffect(() => {
         if (playerHighlighted && currstream) {
@@ -664,36 +676,31 @@ function Chatroom() {
         }
     }, [currstream]);
 
-    if (socket.id === roomhost) {
-        ishost = true;
-    }
-    if (screenStream) {
-        if (length <= 1) {
-            playerContainerClass += ` ${styles.screenOne}`;
-        } else if (length === 2) {
-            playerContainerClass += ` ${styles.screenTwo}`;
-        } else if (length === 3) {
-            playerContainerClass += ` ${styles.screenThree}`;
-        } else if (length === 4) {
-            playerContainerClass += ` ${styles.screenFour}`;
-        } else if (length === 5) {
-            playerContainerClass += ` ${styles.screenFive}`;
+    useEffect(() => {
+        setIsHost(socket.id === roomhost);
+    }, [roomhost]);
+
+    useEffect(() => {
+        let nextClass = styles.PlayerContainer;
+
+        if (screenStream) {
+            if (length <= 1) nextClass += ` ${styles.screenOne}`;
+            else if (length === 2) nextClass += ` ${styles.screenTwo}`;
+            else if (length === 3) nextClass += ` ${styles.screenThree}`;
+            else if (length === 4) nextClass += ` ${styles.screenFour}`;
+            else if (length === 5) nextClass += ` ${styles.screenFive}`;
+            else nextClass += ` ${styles.screenSix}`;
         } else {
-            playerContainerClass += ` ${styles.screenSix}`;
+            if (length === 1) nextClass += ` ${styles.onePlayer}`;
+            else if (length === 2) nextClass += ` ${styles.twoPlayers}`;
+            else if (length === 3) nextClass += ` ${styles.threePlayers}`;
+            else if (length === 4) nextClass += ` ${styles.fourPlayers}`;
+            else if (length === 5) nextClass += ` ${styles.fivePlayers}`;
+            else if (length === 6) nextClass += ` ${styles.sixPlayers}`;
         }
-    } else if (length === 1) {
-        playerContainerClass += ` ${styles.onePlayer}`;
-    } else if (length === 2) {
-        playerContainerClass += ` ${styles.twoPlayers}`;
-    } else if (length === 3) {
-        playerContainerClass += ` ${styles.threePlayers}`;
-    } else if (length === 4) {
-        playerContainerClass += ` ${styles.fourPlayers}`;
-    } else if (length === 5) {
-        playerContainerClass += ` ${styles.fivePlayers}`;
-    } else if (length === 6) {
-        playerContainerClass += ` ${styles.sixPlayers}`;
-    }
+
+        setPlayerContainerClass(nextClass);
+    }, [screenStream, length]);
 
     const roomParticipantCount =
         data.filter((item) => item.room === roomId).length || length;
@@ -795,7 +802,7 @@ function Chatroom() {
                                                     item.peerId === playerId,
                                             )?.usname
                                         }
-                                        ishost={ishost}
+                                        ishost={isHost}
                                         mictoggleuser={mictoggleuser}
                                     />
                                 );
