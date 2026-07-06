@@ -24,7 +24,6 @@ function Chatroom() {
     const [roomId, setRoomId] = useState(newroom);
     const [allow, setAllow] = useState(false);
     const [usernameApproved, setUsernameApproved] = useState(false);
-    const history = createBrowserHistory();
     const [data, setData] = useState([]);
     const { peer, myId } = usePeer();
     const [length, setLength] = useState(0);
@@ -75,10 +74,11 @@ function Chatroom() {
         if (stream && players[myId]) {
             stream.getAudioTracks()[0].enabled = !players[myId].muted;
         }
-    }, [stream, players]);
+    }, [stream, players, myId]);
 
     useEffect(() => {
-        history.listen((update) => {
+        const history = createBrowserHistory();
+        const unlisten = history.listen((update) => {
             if (update.action === "POP") {
                 if (screenStream) {
                     screenStream.getTracks().forEach((track) => track.stop());
@@ -88,7 +88,8 @@ function Chatroom() {
                 socket.emit("back-button-leave", socket.id);
             }
         });
-    }, [screenStream]);
+        return unlisten;
+    }, [screenStream, myId]);
 
     useEffect(() => {
         socket.emit("username", { user });
