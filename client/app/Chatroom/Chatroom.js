@@ -113,7 +113,6 @@ function Chatroom() {
         if (message) {
             socket.emit("message", { message, roomId, user });
         }
-
         setMessage("");
     };
     // xstream = null;

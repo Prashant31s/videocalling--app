@@ -565,7 +565,7 @@
     height: 28px;
     border: none;
     border-radius: 8px;
-    background: rgba(239, 68, 68, 0.8);
+    /* background: rgba(239, 68, 68, 0.8); */
     color: white;
     padding: 0;
     cursor: pointer;

@@ -65,7 +65,7 @@ export default function Home() {
                     <div className="brandMark">
                         <Video size={24} />
                     </div>
-                    <p className="eyebrow">Secure video rooms</p>
+                    <p className="eyebrow">OMNIMEET</p>
                     <h1>Join a call without the clutter.</h1>
                     <p className="introCopy">
                         Enter your name and room code to continue into a focused
